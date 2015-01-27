@@ -6,7 +6,7 @@
 #define BUFFER_SIZE 4096
 
 struct fasta_t *fasta_new() {
-  struct fasta_t *fasta = malloc(sizeof(struct fasta_t));
+  struct fasta_t *fasta = (fasta_t*) malloc(sizeof(struct fasta_t));
   fasta->entries = NULL;
   fasta->last = NULL;
   fasta->length = 0;
@@ -54,18 +54,18 @@ struct fasta_t *fasta_read_file(FILE *file) {
       fasta_append_entry(fasta, curr_entry);
       curr_entry = NULL;
     } else if (line[0] == '>') {
-      curr_entry = malloc(sizeof(struct fasta_entry_t));
-      curr_entry->header = malloc((fasta_line_length(line) - 1) * sizeof(char));
+      curr_entry = (fasta_entry_t*) malloc(sizeof(struct fasta_entry_t));
+      curr_entry->header = (char*) malloc((fasta_line_length(line) - 1) * sizeof(char));
       for (int i = 1; i < fasta_line_length(line) - 1; i++) {
         curr_entry->header[i - 1] = line[i];
       }
     } else if (!isspace(line[0])) {
       int length = fasta_line_length(line);
       if (curr_entry->content == NULL) {
-        curr_entry->content = malloc(length * sizeof(char));
+        curr_entry->content = (char*) malloc(length * sizeof(char));
       } else {
         curr_entry->content =
-          realloc(curr_entry->content, (curr_entry_sequence_pos + length) * sizeof(char));
+          (char*) realloc(curr_entry->content, (curr_entry_sequence_pos + length) * sizeof(char));
       }
       for (int i = 0; i < length; i++) {
         curr_entry->content[curr_entry_sequence_pos + i] = line[i];

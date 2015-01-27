@@ -188,12 +188,12 @@ IF(UNIX AND NOT WIN32)
   #This adds the 'dist' target
   add_custom_target(dist COMMAND ${CMAKE_MAKE_PROGRAM} package_source)
 
-  # Experiments
-  add_subdirectory(experiments)
-
   # Read fasta files and HMM specifications
   add_subdirectory(fasta)
   add_subdirectory(hmm)
+
+  # Experiments
+  add_subdirectory(experiments)
 
 ELSE(UNIX AND NOT WIN32)
   message("

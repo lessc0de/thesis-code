@@ -14,13 +14,13 @@ struct hmm_t *hmm_read_path(char *path, bool logspace) {
 }
 
 struct hmm_t *hmm_read(FILE *file, bool logspace) {
-  struct hmm_t *hmm = malloc(sizeof(struct hmm_t));
+  struct hmm_t *hmm = (hmm_t*) malloc(sizeof(struct hmm_t));
 
   /** STATES **/
   fscanf(file, "states");
   fscanf(file, "%d ", &hmm->states_size);
 
-  hmm->states = malloc(hmm->states_size * sizeof(int));
+  hmm->states = (char*) malloc(hmm->states_size * sizeof(int));
   for (int i = 0; i < hmm->states_size; i++) {
     fscanf(file, "%c ", &hmm->states[i]);
   }
@@ -28,7 +28,7 @@ struct hmm_t *hmm_read(FILE *file, bool logspace) {
 
   /** EMISSION COUNT **/
   fscanf(file, "emissionCount");
-  hmm->emission_count = malloc(hmm->states_size * sizeof(int));
+  hmm->emission_count = (int*) malloc(hmm->states_size * sizeof(int));
   hmm->emission_count_max = INT_MIN;
   for (int i = 0; i < hmm->states_size; i++) {
     fscanf(file, "%i ", &hmm->emission_count[i]);
@@ -42,14 +42,14 @@ struct hmm_t *hmm_read(FILE *file, bool logspace) {
   fscanf(file, "observables");
   fscanf(file, "%d ", &hmm->observables_size);
 
-  hmm->observables = malloc(hmm->observables_size * sizeof(char));
+  hmm->observables = (char*) malloc(hmm->observables_size * sizeof(char));
   for (int i = 0; i < hmm->observables_size; i++) {
     fscanf(file, "%s ", &hmm->observables[i]); // eat whitespace.
   }
 
   /** INITIAL PROBS **/
   fscanf(file, "initProbs");
-  hmm->initial_probs = malloc(hmm->states_size * sizeof(double));
+  hmm->initial_probs = (double*) malloc(hmm->states_size * sizeof(double));
   for (int i = 0; i < hmm->states_size; i++) {
     fscanf(file, "%le ", &hmm->initial_probs[i]);
     if (logspace) {
@@ -59,9 +59,9 @@ struct hmm_t *hmm_read(FILE *file, bool logspace) {
 
   /** TRANSITION PROBS **/
   fscanf(file, "transProbs");
-  hmm->transition_probs = malloc(hmm->states_size * sizeof(double *));
+  hmm->transition_probs = (double**) malloc(hmm->states_size * sizeof(double *));
   for (int i = 0; i < hmm->states_size; i++) {
-    hmm->transition_probs[i] = malloc(hmm->states_size * sizeof(double));
+    hmm->transition_probs[i] = (double*) malloc(hmm->states_size * sizeof(double));
     for (int j = 0; j < hmm->states_size; j++) {
       fscanf(file, "%le ", &hmm->transition_probs[i][j]);
       if (logspace) {
@@ -73,7 +73,7 @@ struct hmm_t *hmm_read(FILE *file, bool logspace) {
   /** EMISSION PROBS **/
 
   // Find the unique emission counts for all states.
-  int *emission_count_unique = malloc(hmm->states_size * sizeof(int));
+  int *emission_count_unique = (int*) malloc(hmm->states_size * sizeof(int));
   memset(emission_count_unique, 0, hmm->states_size * sizeof(int));
 
   for (int i = 0; i < hmm->states_size; i++) {
@@ -101,7 +101,7 @@ struct hmm_t *hmm_read(FILE *file, bool logspace) {
 
   // Compute offsets for emission probabilities for different
   // emission counts in the emission probability matrix.
-  hmm->emission_offsets = malloc(hmm->states_size * sizeof(int));
+  hmm->emission_offsets = (int*) malloc(hmm->states_size * sizeof(int));
   for (int i = 0; i < hmm->states_size; i++) {
     if (emission_count_unique[i] == 0) {
       continue;
@@ -117,9 +117,9 @@ struct hmm_t *hmm_read(FILE *file, bool logspace) {
   free(emission_count_unique);
 
   fscanf(file, "emProbs");
-  hmm->emission_probs = malloc(hmm->states_size * sizeof(double *));
+  hmm->emission_probs = (double**) malloc(hmm->states_size * sizeof(double *));
   for (int i = 0; i < hmm->states_size; i++) {
-    hmm->emission_probs[i] = malloc(cols * sizeof(double));
+    hmm->emission_probs[i] = (double*) malloc(cols * sizeof(double));
     for (int j = 0; j < cols; j++) {
       fscanf(file, "%le ", &hmm->emission_probs[i][j]);
       if (logspace) {
@@ -222,7 +222,7 @@ void hmm_write(FILE *file, struct hmm_t *hmm) {
 }
 
 int *hmm_translate_observations_to_indexes(struct hmm_t *hmm, const char *observations, int length) {
-  int *observations_idx = malloc(length * sizeof(int));
+  int *observations_idx = (int*) malloc(length * sizeof(int));
   for (int i = 0; i < length; i++) {
     for (int j = 0; j < hmm->observables_size; j++) {
       if (observations[i] == hmm->observables[j]) {
