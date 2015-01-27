@@ -557,6 +557,7 @@ namespace hmmlib {
                 path_probs.get_chunk(i,c) += E_log.get_chunk(x,c);
             }
         }
+
         // Backtracking - final row
         float_type loglikelihood = -INFINITY;
         int hidden_state = 0;
@@ -567,6 +568,7 @@ namespace hmmlib {
             }
         }
         hiddenseq[length - 1] = hidden_state;
+
         // Backtracking - recursion
         for (unsigned i = length - 1; i > 0; --i) {
             float_type max = -INFINITY;
@@ -582,8 +584,10 @@ namespace hmmlib {
             hidden_state = maxidx;
             hiddenseq[i-1] = hidden_state;
         }
+
         return loglikelihood;
     }
+
     template <typename float_type, typename sse_float_type>
     void
     HMM<float_type, sse_float_type>::posterior_decoding(const sequence &obsseq,
@@ -593,16 +597,16 @@ namespace hmmlib {
                                                         HMMMatrix<float_type, sse_float_type> &post) {
         const int length = obsseq.size();
         const int no_chunks = F.get_no_chunks_per_row();
-        ifdef WITH_OMP
-            pragma omp parallel for
-            endif
-            for (int i = 0; i < length; ++i) {
-                sse_float_type scale;
-                sse_operations_traits::set_all(scale, (float_type) (1.0/scales(i)));
-                for (int chunk = 0; chunk < no_chunks; ++chunk) {
-                    post.get_chunk(i, chunk) = F.get_chunk(i, chunk) * B.get_chunk(i, chunk) * scale;
-                }
+#ifdef WITH_OMP
+#pragma omp parallel for
+#endif
+        for (int i = 0; i < length; ++i) {
+            sse_float_type scale;
+            sse_operations_traits::set_all(scale, (float_type) (1.0/scales(i)));
+            for (int chunk = 0; chunk < no_chunks; ++chunk) {
+                post.get_chunk(i, chunk) = F.get_chunk(i, chunk) * B.get_chunk(i, chunk) * scale;
             }
+        }
     }
 } // end of namespace
 #endif
