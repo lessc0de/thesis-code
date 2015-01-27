@@ -23,6 +23,9 @@
 #include "HMMlib/hmm_table.hpp"
 #include "HMMlib/hmm.hpp"
 
+#include "fasta/fasta.h"
+#include "hmm/hmm.h"
+
 #include <pmmintrin.h>
 using namespace hmmlib;
 
@@ -67,5 +70,8 @@ void viterbi_2x2_with_transitions() {
 }
 
 int main() {
+    struct hmm_t *hmm = hmm_read_path(argv[1], true);
+    struct fasta_t *fasta = fasta_read_path(argv[2]);
+
     viterbi_2x2_with_transitions<double, double>();
 }

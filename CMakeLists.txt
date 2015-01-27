@@ -190,6 +190,11 @@ IF(UNIX AND NOT WIN32)
 
   # Experiments
   add_subdirectory(experiments)
+
+  # Read fasta files and HMM specifications
+  add_subdirectory(fasta)
+  add_subdirectory(hmm)
+
 ELSE(UNIX AND NOT WIN32)
   message("
     ================================================
