@@ -236,7 +236,7 @@ int *hmm_translate_observations_to_indexes(struct hmm_t *hmm, const char *observ
   return observations_idx;
 }
 
-inline static int cmp(const void* pa, const void* pb) {
+inline int cmp(const void* pa, const void* pb) {
   int a = *(const int*) pa;
   int b = *(const int*) pb;
   return a - b;

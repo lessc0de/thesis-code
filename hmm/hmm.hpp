@@ -31,6 +31,6 @@ void hmm_write_path(char *path, struct hmm_t *hmm);
 
 int *hmm_translate_observations_to_indexes(struct hmm_t *hmm, const char *observations, int length);
 
-inline static int cmp(const void* pa, const void* pb);
+inline int cmp(const void* pa, const void* pb);
 
 #endif
