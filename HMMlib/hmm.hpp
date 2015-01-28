@@ -29,9 +29,9 @@
 #include <assert.h>
 using namespace std;
 
-#include "HMMlib/hmm_matrix.hpp"
-#include "HMMlib/hmm_vector.hpp"
-#include "HMMlib/sse_operator_traits.hpp"
+#include "hmm_matrix.hpp"
+#include "hmm_vector.hpp"
+#include "sse_operator_traits.hpp"
 
 #include <pmmintrin.h>
 

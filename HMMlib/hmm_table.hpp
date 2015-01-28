@@ -22,9 +22,9 @@
 #ifndef HMM_TABLE_HPP
 #define HMM_TABLE_HPP
 
-#include "HMMlib/allocator_traits.hpp"
-#include "HMMlib/operator_traits.hpp"
-#include "HMMlib/float_traits.hpp"
+#include "allocator_traits.hpp"
+#include "operator_traits.hpp"
+#include "float_traits.hpp"
 
 #include <pmmintrin.h>
 

@@ -19,12 +19,12 @@
 // Author: Andreas Sand (asand@birc.au.dk)
 //=========================================================================
 
-#include "HMMlib/hmm_vector.hpp"
-#include "HMMlib/hmm_table.hpp"
-#include "HMMlib/hmm.hpp"
+#include "../HMMlib/hmm_vector.hpp"
+#include "../HMMlib/hmm_table.hpp"
+#include "../HMMlib/hmm.hpp"
 
-#include "fasta_reader.hpp"
-#include "hmm_reader.hpp"
+#include "../fasta/fasta_reader.hpp"
+#include "../hmm/hmm_reader.hpp"
 
 #include <pmmintrin.h>
 #include <string>

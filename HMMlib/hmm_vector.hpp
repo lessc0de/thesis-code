@@ -22,7 +22,7 @@
 #ifndef HMM_VECTOR_HPP
 #define HMM_VECTOR_HPP
 
-#include <HMMlib/hmm_table.hpp>
+#include "hmm_table.hpp"
 
 #include <pmmintrin.h>
 
