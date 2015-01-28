@@ -34,12 +34,39 @@
 #include<omp.h>
 #endif
 
+using namespace hmmlib;
+
 template <typename float_type, typename sse_float_type>
-float_type viterbi(hmm_t *h, string seq) {
-    using namespace hmmlib;
+float_type viterbi(HMM<float_type, sse_float_type>& hmm, string seq) {
+    int seq_length = seq.size();
+    unsigned obs_array[seq_length];
+
+    for (int i = 0; i < seq_length; i++) {
+        if (seq[i] == 'A')
+            obs_array[i] = 0;
+        else if (seq[i] == 'C')
+            obs_array[i] = 1;
+        else if (seq[i] == 'G')
+            obs_array[i] = 2;
+        else if (seq[i] == 'T')
+            obs_array[i] = 3;
+        else
+            exit(1);
+    }
+
+    sequence obsseq(obs_array, obs_array + seq_length);
+    sequence hiddenseq(seq_length);
+
+    double res  = hmm.viterbi(obsseq, hiddenseq);
+
+    return res;
+}
+
+template <typename float_type, typename sse_float_type>
+HMM<float_type, sse_float_type> read_hmm(char *path) {
+    struct hmm_t *h = hmm_read_path(path, false);
     int no_states = h->states_size;
     int alphabet_size = h->observables_size;
-    int seq_length = seq.size();
 
     boost::shared_ptr<HMMVector<float_type, sse_float_type> > pi_ptr(new HMMVector<float_type, sse_float_type>(no_states));
     boost::shared_ptr<HMMMatrix<float_type, sse_float_type> > T_ptr(new HMMMatrix<float_type, sse_float_type>(no_states,no_states));
@@ -65,40 +92,23 @@ float_type viterbi(hmm_t *h, string seq) {
         }
     }
 
+    hmm_free(h);
+
     HMM<float_type, sse_float_type> hmm(pi_ptr, T_ptr, E_ptr);
+    return hmm;
+}
 
-    unsigned obs_array[seq_length];
-
-    for (int i = 0; i < seq_length; i++) {
-        if (seq[i] == 'A')
-            obs_array[i] = 0;
-        else if (seq[i] == 'C')
-            obs_array[i] = 1;
-        else if (seq[i] == 'G')
-            obs_array[i] = 2;
-        else if (seq[i] == 'T')
-            obs_array[i] = 3;
-        else
-            exit(1);
-    }
-
-    sequence obsseq(obs_array, obs_array + seq_length);
-    sequence hiddenseq(seq_length);
-
-    double res  = hmm.viterbi(obsseq, hiddenseq);
-
-    return res;
+std::string read_sequence(char *path) {
+    struct fasta_t *f = fasta_read_path(path);
+    char *seq = (*f->entries).content;
+    string s = string(seq);
+    fasta_free(f);
+    return s;
 }
 
 int main(int argc, char **argv) {
-    struct hmm_t *hmm = hmm_read_path(argv[1], false);
-    struct fasta_t *f = fasta_read_path(argv[2]);
-    char *seq = (*f->entries).content;
-
-    string s = string(seq);
-
-    std::cout << viterbi<double, __m128d>(hmm, s) << std::endl;
-
-    fasta_free(f);
-    hmm_free(hmm);
+    HMM<double, __m128d> h = read_hmm<double, __m128d>(argv[1]);
+    std::string seq = read_sequence(argv[2]);
+    double res = viterbi<double, __m128d>(h, seq);
+    std::cout << res << std::endl;
 }
