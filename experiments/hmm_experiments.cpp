@@ -65,36 +65,21 @@ float_type viterbi(hmm_t *h, string seq) {
         }
     }
 
-    // std::cout << "Init probs" << std::endl;
-    // for (int i = 0; i < no_states; i++) {
-    //     std::cout << pi(i) << " ";
-    // }
-    // std::cout << std::endl;
-
-    // std::cout << "Trans probs" << std::endl;
-    // for (int i = 0; i < no_states; i++) {
-    //     for (int j = 0; j < no_states; j++) {
-    //         std::cout << T(i, j) << " ";
-    //     }
-    // }
-    // std::cout << std::endl;
-
-    // std::cout << "Emit probs" << std::endl;
-    // for (int i = 0; i < no_states; i++) {
-    //     for (int j = 0; j < alphabet_size; j++) {
-    //         std::cout << E(j, i) << " ";
-    //     }
-    // }
-    // std::cout << std::endl;
-
-
-
     HMM<float_type, sse_float_type> hmm(pi_ptr, T_ptr, E_ptr);
 
     unsigned obs_array[seq_length];
 
     for (int i = 0; i < seq_length; i++) {
-        obs_array[i] = seq[i] - 48;
+        if (seq[i] == 'A')
+            obs_array[i] = 0;
+        else if (seq[i] == 'C')
+            obs_array[i] = 1;
+        else if (seq[i] == 'G')
+            obs_array[i] = 2;
+        else if (seq[i] == 'T')
+            obs_array[i] = 3;
+        else
+            exit(1);
     }
 
     sequence obsseq(obs_array, obs_array + seq_length);
@@ -102,10 +87,6 @@ float_type viterbi(hmm_t *h, string seq) {
 
     double res  = hmm.viterbi(obsseq, hiddenseq);
 
-    for (int i = 0; i < hiddenseq.size(); i++) {
-        std::cout << hiddenseq[i];
-    }
-    std::cout << std::endl;
     return res;
 }
 
