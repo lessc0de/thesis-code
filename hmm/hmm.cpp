@@ -117,6 +117,10 @@ struct hmm_t *hmm_read(FILE *file, bool logspace) {
   free(emission_count_unique);
 
   fscanf(file, "emProbs");
+
+  // TODO: Is this correct!?
+  cols = hmm->observables_size;
+
   hmm->emission_probs = (double**) malloc(hmm->states_size * sizeof(double *));
   for (int i = 0; i < hmm->states_size; i++) {
     hmm->emission_probs[i] = (double*) malloc(cols * sizeof(double));

@@ -35,7 +35,7 @@
 #endif
 
 template <typename float_type, typename sse_float_type>
-float_type viterbi_2x2_with_transitions(hmm_t *h, string seq) {
+float_type viterbi(hmm_t *h, string seq) {
     using namespace hmmlib;
     int no_states = h->states_size;
     int alphabet_size = h->observables_size;
@@ -65,23 +65,58 @@ float_type viterbi_2x2_with_transitions(hmm_t *h, string seq) {
         }
     }
 
+    // std::cout << "Init probs" << std::endl;
+    // for (int i = 0; i < no_states; i++) {
+    //     std::cout << pi(i) << " ";
+    // }
+    // std::cout << std::endl;
+
+    // std::cout << "Trans probs" << std::endl;
+    // for (int i = 0; i < no_states; i++) {
+    //     for (int j = 0; j < no_states; j++) {
+    //         std::cout << T(i, j) << " ";
+    //     }
+    // }
+    // std::cout << std::endl;
+
+    // std::cout << "Emit probs" << std::endl;
+    // for (int i = 0; i < no_states; i++) {
+    //     for (int j = 0; j < alphabet_size; j++) {
+    //         std::cout << E(j, i) << " ";
+    //     }
+    // }
+    // std::cout << std::endl;
+
+
+
     HMM<float_type, sse_float_type> hmm(pi_ptr, T_ptr, E_ptr);
 
     unsigned obs_array[seq_length];
+
     for (int i = 0; i < seq_length; i++) {
-        obs_array[i] = seq[i];
+        obs_array[i] = seq[i] - 48;
     }
+
     sequence obsseq(obs_array, obs_array + seq_length);
     sequence hiddenseq(seq_length);
 
-    return hmm.viterbi(obsseq, hiddenseq);
+    double res  = hmm.viterbi(obsseq, hiddenseq);
+
+    for (int i = 0; i < hiddenseq.size(); i++) {
+        std::cout << hiddenseq[i];
+    }
+    std::cout << std::endl;
+    return res;
 }
 
 int main(int argc, char **argv) {
-    struct hmm_t *hmm = hmm_read_path(argv[1], true);
+    struct hmm_t *hmm = hmm_read_path(argv[1], false);
     struct fasta_t *f = fasta_read_path(argv[2]);
     char *seq = (*f->entries).content;
     string s = string(seq);
 
-    std::cout << viterbi_2x2_with_transitions<double, double>(hmm, s) << std::endl;
+    std::cout << viterbi<float, float>(hmm, s) << std::endl;
+
+    fasta_free(f);
+    hmm_free(hmm);
 }
