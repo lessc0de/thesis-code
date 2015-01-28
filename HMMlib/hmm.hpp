@@ -529,6 +529,7 @@ namespace hmmlib {
         E.log(E_log);
 
         // Fill first column of path_probs
+        std::cerr << "Computing table." << std::endl;
         int x = obsseq[0];
         for (int i = 0; i < no_states; ++i) {
             path_probs(0, i) = std::log(pi(i)) + E_log(x, i);
@@ -558,6 +559,7 @@ namespace hmmlib {
             }
         }
 
+        std::cerr << "Backtracking." << std::endl;
         // Backtracking - final row
         float_type loglikelihood = -INFINITY;
         int hidden_state = 0;
