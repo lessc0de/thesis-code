@@ -23,8 +23,8 @@
 #include "HMMlib/hmm_table.hpp"
 #include "HMMlib/hmm.hpp"
 
-#include "fasta.hpp"
-#include "hmm.hpp"
+#include "fasta_reader.hpp"
+#include "hmm_reader.hpp"
 
 #include <pmmintrin.h>
 #include <string>

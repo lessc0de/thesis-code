@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 
-#include "fasta.hpp"
+#include "fasta_reader.hpp"
 
 #define BUFFER_SIZE 4096
 

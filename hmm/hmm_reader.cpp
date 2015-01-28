@@ -4,7 +4,7 @@
 #include <string.h>
 #include <limits.h>
 
-#include "hmm.hpp"
+#include "hmm_reader.hpp"
 
 struct hmm_t *hmm_read_path(char *path, bool logspace) {
   FILE *file = fopen(path, "r");
