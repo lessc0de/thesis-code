@@ -1,0 +1,14 @@
+states
+2
+0 1
+observables
+2
+0 1
+initProbs
+0.20 0.80
+transProbs
+0.10 0.90
+0.90 0.10
+emProbs
+0.25 0.75
+0.25 0.75
