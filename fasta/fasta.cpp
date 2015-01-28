@@ -15,13 +15,14 @@ struct fasta_t *fasta_new() {
 
 void fasta_free(struct fasta_t *fasta) {
   struct fasta_entry_t *curr_entry = fasta->entries;
-  while (curr_entry != NULL) {
+  while (curr_entry) {
     struct fasta_entry_t *next_entry = curr_entry->next;
     free(curr_entry->header);
     free(curr_entry->content);
-
+    free(curr_entry);
     curr_entry = next_entry;
   }
+  free(fasta);
 }
 
 struct fasta_t *fasta_read_path(char *path) {
@@ -56,6 +57,8 @@ struct fasta_t *fasta_read_file(FILE *file) {
     } else if (line[0] == '>') {
       curr_entry = (fasta_entry_t*) malloc(sizeof(struct fasta_entry_t));
       curr_entry->header = (char*) malloc((fasta_line_length(line) - 1) * sizeof(char));
+      curr_entry->next = NULL;
+      curr_entry->content = NULL;
       for (int i = 1; i < fasta_line_length(line) - 1; i++) {
         curr_entry->header[i - 1] = line[i];
       }

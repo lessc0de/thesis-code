@@ -94,7 +94,7 @@ int main(int argc, char **argv) {
     struct hmm_t *hmm = hmm_read_path(argv[1], false);
     struct fasta_t *f = fasta_read_path(argv[2]);
     char *seq = (*f->entries).content;
-    string s = string(seq);
+    string s = string(seq, sizeof(seq));
 
     std::cout << viterbi<float, float>(hmm, s) << std::endl;
 

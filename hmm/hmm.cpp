@@ -31,6 +31,7 @@ struct hmm_t *hmm_read(FILE *file, bool logspace) {
   hmm->emission_count = (int*) malloc(hmm->states_size * sizeof(int));
   hmm->emission_count_max = INT_MIN;
   for (int i = 0; i < hmm->states_size; i++) {
+    hmm->emission_count[i] = 0;
     fscanf(file, "%i ", &hmm->emission_count[i]);
     if (hmm->emission_count[i] > hmm->emission_count_max) {
       hmm->emission_count_max = hmm->emission_count[i];
@@ -44,7 +45,9 @@ struct hmm_t *hmm_read(FILE *file, bool logspace) {
 
   hmm->observables = (char*) malloc(hmm->observables_size * sizeof(char));
   for (int i = 0; i < hmm->observables_size; i++) {
-    fscanf(file, "%s ", &hmm->observables[i]); // eat whitespace.
+    char c;
+    fscanf(file, "%s ", &c); // eat whitespace.
+    hmm->observables[i] = c;
   }
 
   /** INITIAL PROBS **/
@@ -136,31 +139,27 @@ struct hmm_t *hmm_read(FILE *file, bool logspace) {
 }
 
 void hmm_free(struct hmm_t *hmm) {
-  if (hmm->initial_probs != NULL) {
-    free(hmm->initial_probs);
-  }
+  free(hmm->initial_probs);
 
   for (int i = 0; i < hmm->states_size; i++) {
-    if (hmm->transition_probs != NULL && hmm->transition_probs[i] != NULL) {
+    if (hmm->transition_probs != NULL) {
       free(hmm->transition_probs[i]);
     }
   }
-  if (hmm->transition_probs != NULL) {
-    free(hmm->transition_probs);
-  }
+  free(hmm->transition_probs);
 
-  for (int i = 0; i < hmm->observables_size; i++) {
-    if (hmm->emission_probs != NULL && hmm->emission_probs[i] != NULL) {
+  for (int i = 0; i < hmm->states_size; i++) {
+    if (hmm->emission_probs != NULL) {
       free(hmm->emission_probs[i]);
     }
   }
-  if (hmm->emission_probs != NULL) {
-    free(hmm->emission_probs);
-  }
+  free(hmm->emission_probs);
 
-  if (hmm != NULL) {
-    free(hmm);
-  }
+  free(hmm->emission_offsets);
+  free(hmm->emission_count);
+  free(hmm->states);
+  free(hmm->observables);
+  free(hmm);
 }
 
 void hmm_write_path(char *path, struct hmm_t *hmm) {
