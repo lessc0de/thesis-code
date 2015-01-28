@@ -97,7 +97,7 @@ int main(int argc, char **argv) {
 
     string s = string(seq);
 
-    std::cout << viterbi<float, float>(hmm, s) << std::endl;
+    std::cout << viterbi<double, __m128d>(hmm, s) << std::endl;
 
     fasta_free(f);
     hmm_free(hmm);
