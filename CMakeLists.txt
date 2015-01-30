@@ -197,6 +197,9 @@ IF(UNIX AND NOT WIN32)
   # Experiments
   add_subdirectory(experiments)
 
+  # zipHMM
+  add_subdirectory(zipHMM)
+
 ELSE(UNIX AND NOT WIN32)
   message("
     ================================================
