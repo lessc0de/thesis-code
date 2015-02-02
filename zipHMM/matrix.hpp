@@ -10,6 +10,7 @@
 #include <vector>
 #include <algorithm>
 #include <cstdlib>
+#include <cassert>
 
 #if defined __APPLE__
 #include <Accelerate/Accelerate.h>
@@ -225,21 +226,16 @@ namespace zipHMM {
 
             res.reset(lhs.height, rhs.width);
 
-            double *outPtr = res.content;
-            const double *lhsPtr = lhs.content;
-
             for(size_t i = 0; i < lhs.height; ++i) {
                 for(size_t j = 0; j < rhs.width; ++j) {
-                    double val = Space::mult(*lhsPtr++, rhs(0, j));
+                    double val = Space::mult(lhs(i, 0), rhs(0, j));
                     for(size_t k = 1; k < depth; ++k) {
-                        double newVal = Space::mult(*lhsPtr++, rhs(k, j));
+                        double newVal = Space::mult(lhs(i, k), rhs(k, j));
                         if(newVal > val)
                             val = newVal;
                     }
-                    lhsPtr -= depth;
-                    *outPtr++ = val;
+                    res(i, j) = val;
                 }
-                lhsPtr += depth;
             }
         }
 

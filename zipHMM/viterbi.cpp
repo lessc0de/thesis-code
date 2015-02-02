@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <limits>
 #include <cmath>
+#include <cassert>
 
 namespace zipHMM {
 
@@ -47,7 +48,6 @@ namespace zipHMM {
                 end_point = r;
             }
         }
-
 
         // backtrack
         viterbi_path.resize(length);
@@ -95,34 +95,77 @@ namespace zipHMM {
         // Compute M matrices.
         std::vector<Matrix*> Ms;
         for(size_t c = 0; c < length; ++c) {
-            Matrix M(no_states, no_states);
+            Matrix* M = new Matrix(no_states, no_states);
             for(size_t i = 0; i < no_states; ++i) {
                 for(size_t j = 0; j < no_states; ++j) {
-                    M(i, j) = B(i, seq[c]) * A(i, j);
+                    (*M)(i, j) = std::log(B(i, seq[c]) * A(j, i));
                 }
             }
-            Ms.push_back(&M);
+            Ms.push_back(M);
         }
 
-        // Multiply them
+        // Compute the first column of the Viterbi table.
         Matrix res(no_states, 1);
         for(size_t r = 0; r < no_states; ++r) {
-            res(r, 0) = pi(r, 0) * B(r, seq[0]);
+            res(r, 0) = std::log(pi(r, 0) * B(r, seq[0]));
+
+            // Make a copy in the Viterbi table. TODO: Figure out a better way
+            // of doing this.
+            viterbi_table(r, 0) = res(r, 0);
         }
 
+        // Compute the rest of the Viterbi table using the M matrices.
         for(size_t c = 1; c < length; ++c) {
-            Matrix::maxMult<LinearSpace>(*Ms[c], res, res);
-        }
+            // Since maxMult changes the res matrix inplace, we need to make a
+            // copy of it. TODO: Figure out a better way to do this.
+            Matrix rhs(no_states, 1);
+            for(size_t r = 0; r < no_states; ++r) {
+                rhs(r, 0) = res(r, 0);
+            }
 
+            Matrix::maxMult<LogSpace>(*Ms[c], rhs, res);
 
-        double path_ll = res(0, 0);
-        for(size_t r = 1; r < no_states; ++r) {
-            if(res(r, 0) > path_ll) {
-                path_ll = res(r, 0);
+            // Make a copy in the Viterbi table. TODO: Figure out a better way
+            // of doing this.
+            for(size_t r = 0; r < no_states; ++r) {
+                viterbi_table(r, c) = res(r, 0);
             }
         }
 
-        return std::log(path_ll);
+        // Find the end states and the log-likelihood of the most probable
+        // path.
+        double path_ll = viterbi_table(0, length - 1);
+        size_t end_point = 0;
+        for(size_t r = 1; r < no_states; ++r) {
+            if(viterbi_table(r, length - 1) > path_ll) {
+                path_ll = viterbi_table(r, length - 1);
+                end_point = r;
+            }
+        }
+
+        // Backtrack.
+        viterbi_path.resize(length);
+        viterbi_path[length - 1] = unsigned(end_point);
+
+        size_t current_state = end_point;
+        for(size_t c = length - 1; c > 0; --c) {
+            double max_value = viterbi_table(0, c - 1) +
+                std::log(A(0, current_state) * B(current_state, seq[c]));
+
+            size_t max_state = 0;
+            for(size_t prev_state = 1; prev_state < no_states; ++prev_state) {
+                double prev_state_ll = viterbi_table(prev_state, c - 1) +
+                    std::log(A(prev_state, current_state) * B(current_state, seq[c]));
+                if(prev_state_ll > max_value) {
+                    max_value = prev_state_ll;
+                    max_state = prev_state;
+                }
+            }
+            viterbi_path[c - 1] = unsigned(max_state);
+            current_state = max_state;
+        }
+
+        return path_ll;
     }
 
     double viterbi_comp(const std::string &seq_filename,

@@ -25,6 +25,7 @@
 
 #include <string>
 #include <cassert>
+#include <iomanip>
 
 #ifdef WITH_OMP
 #include<omp.h>
@@ -75,6 +76,6 @@ int main(int argc, char **argv) {
 
     double my_res = zipHMM::viterbi_comp(sequence, init_probs, trans_probs, em_probs, viterbi_path);
     std::cout << "My impl.:\t" << my_res << std::endl;
-    assert(res == my_res);
+    assert(std::abs(res - my_res) < 1e-10);
     exit(0);
 }
