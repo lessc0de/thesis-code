@@ -6,6 +6,7 @@
 struct fasta_entry_t {
   char *header;
   char *content;
+  int length;
   struct fasta_entry_t *next;
 };
 

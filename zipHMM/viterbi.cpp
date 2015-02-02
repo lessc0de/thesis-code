@@ -3,6 +3,7 @@
 
 #include "matrix.hpp"
 #include "seq_io.hpp"
+#include "prob_spaces.hpp"
 
 #include <vector>
 #include <algorithm>
@@ -78,6 +79,60 @@ namespace zipHMM {
         std::vector<unsigned> seq;
         readSeq(seq, seq_filename);
         return viterbi(seq, pi, A, B, viterbi_path);
+    }
+
+    double viterbi_comp(const std::vector<unsigned> &seq,
+                        const Matrix &pi,
+                        const Matrix &A,
+                        const Matrix &B,
+                        std::vector<unsigned> &viterbi_path) {
+
+        size_t no_states = A.get_height();
+        size_t length = seq.size();
+
+        Matrix viterbi_table(no_states, length);
+
+        // Compute M matrices.
+        std::vector<Matrix*> Ms;
+        for(size_t c = 0; c < length; ++c) {
+            Matrix M(no_states, no_states);
+            for(size_t i = 0; i < no_states; ++i) {
+                for(size_t j = 0; j < no_states; ++j) {
+                    M(i, j) = B(i, seq[c]) * A(i, j);
+                }
+            }
+            Ms.push_back(&M);
+        }
+
+        // Multiply them
+        Matrix res(no_states, 1);
+        for(size_t r = 0; r < no_states; ++r) {
+            res(r, 0) = pi(r, 0) * B(r, seq[0]);
+        }
+
+        for(size_t c = 1; c < length; ++c) {
+            Matrix::maxMult<LinearSpace>(*Ms[c], res, res);
+        }
+
+
+        double path_ll = res(0, 0);
+        for(size_t r = 1; r < no_states; ++r) {
+            if(res(r, 0) > path_ll) {
+                path_ll = res(r, 0);
+            }
+        }
+
+        return std::log(path_ll);
+    }
+
+    double viterbi_comp(const std::string &seq_filename,
+                        const Matrix &pi,
+                        const Matrix &A,
+                        const Matrix &B,
+                        std::vector<unsigned> &viterbi_path) {
+        std::vector<unsigned> seq;
+        readSeq(seq, seq_filename);
+        return viterbi_comp(seq, pi, A, B, viterbi_path);
     }
 
 }

@@ -24,7 +24,7 @@
 #include "../fasta/fasta_reader.hpp"
 
 #include <string>
-
+#include <cassert>
 
 #ifdef WITH_OMP
 #include<omp.h>
@@ -33,9 +33,8 @@
 std::vector<unsigned> read_sequence(char *path) {
     struct fasta_t *f = fasta_read_path(path);
     char *seq = (*f->entries).content;
-    std::string s = std::string(seq);
 
-    int seq_length = s.size();
+    int seq_length = (*f->entries).length;
     std::vector<unsigned> obs_array(seq_length);
 
     for (int i = 0; i < seq_length; i++) {
@@ -47,14 +46,21 @@ std::vector<unsigned> read_sequence(char *path) {
             obs_array[i] = 2;
         else if (seq[i] == 'T')
             obs_array[i] = 3;
-        else
+        else {
+            std::cout << "Unknown symbol " << seq[i] << std::endl;
             exit(1);
+        }
     }
     fasta_free(f);
     return obs_array;
 }
 
 int main(int argc, char **argv) {
+    if (argc != 3) {
+        std::cout << "Please provide HMM model and fasta file." << std::endl;
+        exit(1);
+    }
+
     std::vector<unsigned> viterbi_path(1883377);
     zipHMM::Matrix init_probs;
     zipHMM::Matrix trans_probs;
@@ -65,5 +71,10 @@ int main(int argc, char **argv) {
     std::vector<unsigned> sequence = read_sequence(argv[2]);
 
     double res = zipHMM::viterbi(sequence, init_probs, trans_probs, em_probs, viterbi_path);
-    std::cout << res << std::endl;
+    std::cout << "Reference:\t" << res << std::endl;
+
+    double my_res = zipHMM::viterbi_comp(sequence, init_probs, trans_probs, em_probs, viterbi_path);
+    std::cout << "My impl.:\t" << my_res << std::endl;
+    assert(res == my_res);
+    exit(0);
 }

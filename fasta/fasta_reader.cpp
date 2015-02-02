@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <ctype.h>
+#include <iostream>
 
 #include "fasta_reader.hpp"
 
@@ -59,6 +60,7 @@ struct fasta_t *fasta_read_file(FILE *file) {
       curr_entry->header = (char*) malloc((fasta_line_length(line) - 1) * sizeof(char));
       curr_entry->next = NULL;
       curr_entry->content = NULL;
+      curr_entry->length = 0;
       for (int i = 1; i < fasta_line_length(line) - 1; i++) {
         curr_entry->header[i - 1] = line[i];
       }
@@ -74,6 +76,7 @@ struct fasta_t *fasta_read_file(FILE *file) {
         curr_entry->content[curr_entry_sequence_pos + i] = line[i];
       }
       curr_entry_sequence_pos += length;
+      curr_entry->length += length;
     }
   }
 
