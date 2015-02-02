@@ -8,7 +8,7 @@ find_package(Threads REQUIRED)
 
 ## BLAS
 IF(UNIX AND NOT APPLE)
-  set(ATLAS_ROOT "/users/muldvang/ATLAS/build")
+  set(ATLAS_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/../ATLAS/build")
   include_directories("${ATLAS_ROOT}/include")
   link_directories("${ATLAS_ROOT}/lib")
 ELSE(UNIX AND NOT APPLE)
