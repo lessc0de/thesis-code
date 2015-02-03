@@ -2,6 +2,7 @@
 #define VITERBI_HPP
 
 #include "matrix.hpp"
+#include "hmm_utils.hpp"
 
 #include <vector>
 #include <map>
@@ -35,8 +36,27 @@ namespace zipHMM {
                       const size_t no_states,
                       const size_t min_no_eval); // convenient
 
-        double forward(const Matrix &pi, const Matrix &A, const Matrix &B) const;
+        double viterbi_seq(const Matrix &pi, const Matrix &A, const Matrix &B,
+                           const std::vector<unsigned> &sequence,
+                           const double *symbol2scale,
+                           const Matrix *symbol2matrix) const;
 
+
+        double viterbi(const Matrix &pi, const Matrix &A, const Matrix &B) const;
+
+        void init_data_structure(const std::vector<std::vector<unsigned> > &sequences,
+                                 const size_t alphabet_size,
+                                 std::vector<size_t> &nStatesSave,
+                                 const size_t min_no_eval);
+
+    private:
+        void compute_symbol2scale_and_symbol2matrix(Matrix *symbol2matrix,
+                                                    double *symbol2scale,
+                                                    const Matrix &A,
+                                                    const Matrix &B,
+                                                    size_t alphabet_size) const;
+
+    };
 
     double viterbi_orig(const std::vector<unsigned> &seq,
                         const Matrix &initProbs,
@@ -61,8 +81,6 @@ namespace zipHMM {
                         const Matrix &A,
                         const Matrix &B,
                         std::vector<unsigned> &viterbi_path);
-
-    };
 }
 
 #endif
