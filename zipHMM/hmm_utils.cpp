@@ -60,7 +60,7 @@ namespace zipHMM {
 
     for(size_t r = 0; r < nStates; ++r) {
       for(size_t c = 0; c < nStates; ++c)
-	res(r, c) = A(c, r) * B(r, symbol);
+	res(r, c) = std::log(A(c, r) * B(r, symbol));
     }
 
     // return res.normalize();

@@ -197,25 +197,16 @@ namespace zipHMM {
                                 const std::vector<unsigned> &sequence,
                                 const double *symbol2scale,
                                 const Matrix *symbol2matrix) const {
-
         size_t no_states = A.get_height();
         Matrix res(no_states, 1);
-        Matrix tmp;
-        size_t length = sequence.size();
 
         for(size_t r = 0; r < no_states; ++r) {
             res(r, 0) = std::log(pi(r, 0) * B(r, sequence[0]));
         }
 
-        for(size_t c = 1; c < length; ++c) {
-            Matrix lhs(no_states, no_states);
-            for(size_t i = 0; i < no_states; ++i) {
-                for(size_t j = 0; j < no_states; ++j) {
-                    lhs(i, j) = std::log(symbol2matrix[sequence[c]](i, j));
-                }
-            }
-
-            Matrix::maxMult<LogSpace>(lhs, res, tmp);
+        Matrix tmp;
+        for(size_t c = 1; c < sequence.size(); ++c) {
+            Matrix::maxMult<LogSpace>(symbol2matrix[sequence[c]], res, tmp);
             Matrix::copy(tmp, res);
         }
 
@@ -291,7 +282,7 @@ namespace zipHMM {
             Matrix &left_matrix  = symbol2matrix[left_symbol];
             Matrix &right_matrix = symbol2matrix[right_symbol];
 
-            Matrix::maxMult<LinearSpace>(left_matrix, right_matrix, symbol2matrix[i]);
+            Matrix::maxMult<LogSpace>(left_matrix, right_matrix, symbol2matrix[i]);
             // TODO: Forward broken! Fix this!
             symbol2scale[i] = std::log( 1 ) + symbol2scale[left_symbol] + symbol2scale[right_symbol];
             // symbol2scale[i] = std::log( symbol2matrix[i].normalize() ) + symbol2scale[left_symbol] + symbol2scale[right_symbol];
