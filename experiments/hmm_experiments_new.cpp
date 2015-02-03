@@ -78,7 +78,7 @@ int main(int argc, char **argv) {
 
     zipHMM::Timer ref_timer;
     ref_timer.start();
-    double res = zipHMM::viterbi_orig(sequence, init_probs, trans_probs, em_probs, viterbi_path);
+    double res = zipHMM::viterbi(sequence, init_probs, trans_probs, em_probs, viterbi_path);
     ref_timer.stop();
     std::cout << "Reference:\t" << res << "\t" << ref_timer.timeElapsed() << std::endl;
 
