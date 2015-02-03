@@ -71,7 +71,7 @@ int main(int argc, char **argv) {
 
     std::vector<unsigned> sequence = read_sequence(argv[2]);
 
-    double res = zipHMM::viterbi(sequence, init_probs, trans_probs, em_probs, viterbi_path);
+    double res = zipHMM::viterbi_orig(sequence, init_probs, trans_probs, em_probs, viterbi_path);
     std::cout << "Reference:\t" << res << std::endl;
 
     double my_res = zipHMM::viterbi_comp(sequence, init_probs, trans_probs, em_probs, viterbi_path);

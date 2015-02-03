@@ -13,11 +13,11 @@
 
 namespace zipHMM {
 
-    double viterbi(const std::vector<unsigned> &seq,
-                   const Matrix &pi,
-                   const Matrix &A,
-                   const Matrix &B,
-                   std::vector<unsigned> &viterbi_path) {
+    double viterbi_orig(const std::vector<unsigned> &seq,
+                        const Matrix &pi,
+                        const Matrix &A,
+                        const Matrix &B,
+                        std::vector<unsigned> &viterbi_path) {
 
         size_t no_states = A.get_height();
         size_t length = seq.size();
@@ -71,14 +71,14 @@ namespace zipHMM {
         return path_ll;
     }
 
-    double viterbi(const std::string &seq_filename,
-                   const Matrix &pi,
-                   const Matrix &A,
-                   const Matrix &B,
-                   std::vector<unsigned> &viterbi_path) {
+    double viterbi_orig(const std::string &seq_filename,
+                        const Matrix &pi,
+                        const Matrix &A,
+                        const Matrix &B,
+                        std::vector<unsigned> &viterbi_path) {
         std::vector<unsigned> seq;
         readSeq(seq, seq_filename);
-        return viterbi(seq, pi, A, B, viterbi_path);
+        return viterbi_orig(seq, pi, A, B, viterbi_path);
     }
 
     double viterbi_comp(const std::vector<unsigned> &seq,
