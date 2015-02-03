@@ -43,9 +43,9 @@ if __name__ == "__main__":
     for row in A:
         for e in row:
             sys.stdout.write(str(e) + " ")
-        print()
+        print
     print("B")
     for row in B:
         for e in row:
             sys.stdout.write(str(e) + " ")
-        print()
+        print
