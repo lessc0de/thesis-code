@@ -197,8 +197,10 @@ namespace zipHMM {
                                 const std::vector<unsigned> &sequence,
                                 const double *symbol2scale,
                                 const Matrix *symbol2matrix) const {
+
         size_t no_states = A.get_height();
         Matrix res(no_states, 1);
+        Matrix tmp;
         size_t length = sequence.size();
 
         for(size_t r = 0; r < no_states; ++r) {
@@ -206,13 +208,6 @@ namespace zipHMM {
         }
 
         for(size_t c = 1; c < length; ++c) {
-            // Since maxMult changes the res matrix inplace, we need to make a
-            // copy of it. TODO: Figure out a better way to do this.
-            Matrix rhs(no_states, 1);
-            for(size_t r = 0; r < no_states; ++r) {
-                rhs(r, 0) = res(r, 0);
-            }
-
             Matrix lhs(no_states, no_states);
             for(size_t i = 0; i < no_states; ++i) {
                 for(size_t j = 0; j < no_states; ++j) {
@@ -220,7 +215,8 @@ namespace zipHMM {
                 }
             }
 
-            Matrix::maxMult<LogSpace>(lhs, rhs, res);
+            Matrix::maxMult<LogSpace>(lhs, res, tmp);
+            Matrix::copy(tmp, res);
         }
 
         double path_ll = res(0, 0);
@@ -406,15 +402,10 @@ namespace zipHMM {
         }
 
         // Compute the rest of the Viterbi table using the M matrices.
+        Matrix tmp;
         for(size_t c = 1; c < length; ++c) {
-            // Since maxMult changes the res matrix inplace, we need to make a
-            // copy of it. TODO: Figure out a better way to do this.
-            Matrix rhs(no_states, 1);
-            for(size_t r = 0; r < no_states; ++r) {
-                rhs(r, 0) = res(r, 0);
-            }
-
-            Matrix::maxMult<LogSpace>(*Ms[c], rhs, res);
+            Matrix::maxMult<LogSpace>(*Ms[c], res, tmp);
+            Matrix::copy(tmp, res);
 
             // Make a copy in the Viterbi table. TODO: Figure out a better way
             // of doing this.
