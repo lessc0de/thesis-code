@@ -29,11 +29,11 @@ namespace zipHMM {
   void add_count(std::vector<size_t> &pair_n, std::vector<unsigned> *seq_p, size_t position, bool &counted, size_t alphabet_size) {
     s_pair current_pair((*seq_p)[position], (*seq_p)[position+1]);
     // if it didn't match previous position, increase count
-    if(!matches(current_pair, seq_p, position-1)) { 
+    if(!matches(current_pair, seq_p, position-1)) {
       update_pair_n(pair_n, current_pair, alphabet_size);
       counted = true;
       // if it matched at the previous position, check if the previous position was counted before increasing count
-    } else if(!counted) { 
+    } else if(!counted) {
       update_pair_n(pair_n, current_pair, alphabet_size);
       counted = true;
       // if it did match and was counted at previous position, don't increase count at this position.
@@ -45,23 +45,27 @@ namespace zipHMM {
   double init_apply_em_prob(Matrix &res, const Matrix &pi, const Matrix &B, const unsigned symbol) {
     const size_t nStates = pi.get_height();
     res.reset(nStates, 1);
-    
+
     for(size_t i = 0; i < nStates; ++i)
       res(i, 0) = pi(i, 0) * B(i, symbol);
-    
-    return res.normalize();
+
+    // return res.normalize();
+    // TODO: Forward broken! Fix this!
+    return 0;
   }
-  
+
   double apply_em_prob(Matrix &res, const Matrix &A, const Matrix &B, const unsigned symbol) {
     const size_t nStates = A.get_height();
     res.reset(nStates, nStates);
-    
+
     for(size_t r = 0; r < nStates; ++r) {
       for(size_t c = 0; c < nStates; ++c)
 	res(r, c) = A(c, r) * B(r, symbol);
     }
 
-    return res.normalize();
+    // return res.normalize();
+    // TODO: Forward broken! Fix this!
+    return 0;
   }
 
   void make_em_trans_probs_array(double *symbol2scale, Matrix *symbol2matrix, const Matrix &A, const Matrix &B) {

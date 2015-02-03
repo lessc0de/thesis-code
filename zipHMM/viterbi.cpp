@@ -197,29 +197,39 @@ namespace zipHMM {
                                 const std::vector<unsigned> &sequence,
                                 const double *symbol2scale,
                                 const Matrix *symbol2matrix) const {
-        std::deque<double> scales;
-        Matrix res;
-        Matrix tmp;
-        double loglikelihood = 0;
+        size_t no_states = A.get_height();
+        Matrix res(no_states, 1);
+        size_t length = sequence.size();
 
-        // compute C_1 and push corresponding scale
-        scales.push_back( std::log(init_apply_em_prob(res, pi, B, sequence[0])) );
-
-        // multiply matrices across the sequence
-        for(size_t i = 1; i < sequence.size(); ++i) {
-            Matrix::blas_matrix_vector_mult(symbol2matrix[sequence[i]], res, tmp);
-            Matrix::copy(tmp, res);
-
-            scales.push_back( std::log(res.normalize()) );
-            scales.push_back( symbol2scale[sequence[i]] );
+        for(size_t r = 0; r < no_states; ++r) {
+            res(r, 0) = std::log(pi(r, 0) * B(r, sequence[0]));
         }
 
-        // compute loglikelihood by summing log of scales
-        for(std::deque<double>::iterator it = scales.begin(); it != scales.end(); ++it) {
-            loglikelihood += (*it);
+        for(size_t c = 1; c < length; ++c) {
+            // Since maxMult changes the res matrix inplace, we need to make a
+            // copy of it. TODO: Figure out a better way to do this.
+            Matrix rhs(no_states, 1);
+            for(size_t r = 0; r < no_states; ++r) {
+                rhs(r, 0) = res(r, 0);
+            }
+
+            Matrix lhs(no_states, no_states);
+            for(size_t i = 0; i < no_states; ++i) {
+                for(size_t j = 0; j < no_states; ++j) {
+                    lhs(i, j) = std::log(symbol2matrix[sequence[c]](i, j));
+                }
+            }
+
+            Matrix::maxMult<LogSpace>(lhs, rhs, res);
         }
 
-        return loglikelihood;
+        double path_ll = res(0, 0);
+        for(size_t r = 1; r < no_states; ++r) {
+            if(res(r, 0) > path_ll) {
+                path_ll = res(r, 0);
+            }
+        }
+        return path_ll;
     }
 
 
@@ -285,8 +295,10 @@ namespace zipHMM {
             Matrix &left_matrix  = symbol2matrix[left_symbol];
             Matrix &right_matrix = symbol2matrix[right_symbol];
 
-            Matrix::blas_mult(left_matrix, right_matrix, symbol2matrix[i]);
-            symbol2scale[i] = std::log( symbol2matrix[i].normalize() ) + symbol2scale[left_symbol] + symbol2scale[right_symbol];
+            Matrix::maxMult<LinearSpace>(left_matrix, right_matrix, symbol2matrix[i]);
+            // TODO: Forward broken! Fix this!
+            symbol2scale[i] = std::log( 1 ) + symbol2scale[left_symbol] + symbol2scale[right_symbol];
+            // symbol2scale[i] = std::log( symbol2matrix[i].normalize() ) + symbol2scale[left_symbol] + symbol2scale[right_symbol];
         }
     }
 
