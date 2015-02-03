@@ -22,13 +22,18 @@
 #include "../zipHMM/viterbi.hpp"
 #include "../zipHMM/hmm_io.hpp"
 #include "../fasta/fasta_reader.hpp"
+#include "../zipHMM/forwarder.hpp"
+#include "../zipHMM/timer.hpp"
 
 #include <string>
-#include <cassert>
 #include <iomanip>
 
 #ifdef WITH_OMP
 #include<omp.h>
+#include <vector>
+#include <iostream>
+#include <cstdlib>
+
 #endif
 
 std::vector<unsigned> read_sequence(char *path) {
@@ -71,11 +76,29 @@ int main(int argc, char **argv) {
 
     std::vector<unsigned> sequence = read_sequence(argv[2]);
 
+    zipHMM::Timer ref_timer;
+    ref_timer.start();
     double res = zipHMM::viterbi_orig(sequence, init_probs, trans_probs, em_probs, viterbi_path);
-    std::cout << "Reference:\t" << res << std::endl;
+    ref_timer.stop();
+    std::cout << "Reference:\t" << res << "\t" << ref_timer.timeElapsed() << std::endl;
 
+
+    zipHMM::Timer my_timer;
+    my_timer.start();
     double my_res = zipHMM::viterbi_comp(sequence, init_probs, trans_probs, em_probs, viterbi_path);
-    std::cout << "My impl.:\t" << my_res << std::endl;
+    my_timer.stop();
+    std::cout << "My impl.:\t" << my_res << "\t" << my_timer.timeElapsed() << std::endl;
     assert(std::abs(res - my_res) < 1e-10);
+
+    zipHMM::Viterbi v;
+    size_t alphabet_size = 4;
+    size_t min_num_of_evals = 500;
+    v.read_seq(std::string(argv[2]) + "_new", alphabet_size, min_num_of_evals);
+    zipHMM::Timer comp_timer;
+    comp_timer.start();
+    double my_new_res = v.viterbi(init_probs, trans_probs, em_probs);
+    comp_timer.stop();
+    std::cout << "My new impl.:\t" << my_new_res << "\t" << comp_timer.timeElapsed() << std::endl;
+
     exit(0);
 }
