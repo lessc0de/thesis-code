@@ -42,17 +42,16 @@ namespace zipHMM {
     }
   }
 
-  double init_apply_em_prob(Matrix &res, const Matrix &pi, const Matrix &B, const unsigned symbol) {
+  // Helper methods for computing matrices.
+  void _init_apply_em_prob(Matrix &res, const Matrix &pi, const Matrix &B, const unsigned symbol) {
     const size_t nStates = pi.get_height();
     res.reset(nStates, 1);
 
     for(size_t i = 0; i < nStates; ++i)
       res(i, 0) = pi(i, 0) * B(i, symbol);
-
-    return res.normalize();
   }
 
-  double apply_em_prob(Matrix &res, const Matrix &A, const Matrix &B, const unsigned symbol) {
+  void _apply_em_prob(Matrix &res, const Matrix &A, const Matrix &B, const unsigned symbol) {
     const size_t nStates = A.get_height();
     res.reset(nStates, nStates);
 
@@ -60,7 +59,16 @@ namespace zipHMM {
       for(size_t c = 0; c < nStates; ++c)
 	res(r, c) = A(c, r) * B(r, symbol);
     }
+  }
 
+  // Normalized matrices for use with forward algorithm.
+  double init_apply_em_prob(Matrix &res, const Matrix &pi, const Matrix &B, const unsigned symbol) {
+    _init_apply_em_prob(res, pi, B, symbol);
+    return res.normalize();
+  }
+
+  double apply_em_prob(Matrix &res, const Matrix &A, const Matrix &B, const unsigned symbol) {
+    _apply_em_prob(res, A, B, symbol);
     return res.normalize();
   }
 
@@ -70,22 +78,15 @@ namespace zipHMM {
     }
   }
 
+  // Logarithmic matrices for use with Viterbi algorithm.
   void init_apply_em_log_prob(Matrix &res, const Matrix &pi, const Matrix &B, const unsigned symbol) {
-    const size_t nStates = pi.get_height();
-    res.reset(nStates, 1);
-
-    for(size_t i = 0; i < nStates; ++i)
-      res(i, 0) = std::log(pi(i, 0) * B(i, symbol));
+    _init_apply_em_prob(res, pi, B, symbol);
+    res.log();
   }
 
   void apply_em_log_prob(Matrix &res, const Matrix &A, const Matrix &B, const unsigned symbol) {
-    const size_t nStates = A.get_height();
-    res.reset(nStates, nStates);
-
-    for(size_t r = 0; r < nStates; ++r) {
-      for(size_t c = 0; c < nStates; ++c)
-	res(r, c) = std::log(A(c, r) * B(r, symbol));
-    }
+    _apply_em_prob(res, A, B, symbol);
+    res.log();
   }
 
   void make_em_trans_log_probs_array(Matrix *symbol2matrix, const Matrix &A, const Matrix &B) {
@@ -93,5 +94,7 @@ namespace zipHMM {
       apply_em_log_prob(symbol2matrix[unsigned(i)], A, B, unsigned(i));
     }
   }
+
+
 
 }
