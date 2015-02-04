@@ -195,7 +195,6 @@ namespace zipHMM {
 
     double Viterbi::viterbi_seq(const Matrix &pi, const Matrix &A, const Matrix &B,
                                 const std::vector<unsigned> &sequence,
-                                const double *symbol2scale,
                                 const Matrix *symbol2matrix) const {
         size_t no_states = A.get_height();
         Matrix res(no_states, 1);
@@ -255,7 +254,7 @@ namespace zipHMM {
         double ll = 0.0;
         for(std::vector<std::vector<unsigned> >::const_iterator it = sequences->begin(); it != sequences->end(); ++it) {
             const std::vector<unsigned> &sequence = (*it);
-            ll += viterbi_seq(pi, A, B, sequence, symbol2scale, symbol2matrix);
+            ll += viterbi_seq(pi, A, B, sequence, symbol2matrix);
         }
 
         delete[] symbol2scale;

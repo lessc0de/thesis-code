@@ -38,7 +38,6 @@ namespace zipHMM {
 
         double viterbi_seq(const Matrix &pi, const Matrix &A, const Matrix &B,
                            const std::vector<unsigned> &sequence,
-                           const double *symbol2scale,
                            const Matrix *symbol2matrix) const;
 
 
