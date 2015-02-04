@@ -68,10 +68,10 @@ namespace zipHMM {
         pair_n.resize(orig_alphabet_size * orig_alphabet_size);
         for(std::vector<std::vector<unsigned> >::iterator it = current_seqs_p->begin(); it != current_seqs_p->end(); ++it) {
             std::vector<unsigned> &current_seq = (*it);
-            update_pair_n(pair_n, s_pair( current_seq[1] , current_seq[2] ), orig_alphabet_size);
+            update_pair_n_viterbi(pair_n, s_pair( current_seq[1] , current_seq[2] ), orig_alphabet_size);
             counted = true;
             for(size_t i = 2; i < current_seq.size() - 1; ++i)
-                add_count(pair_n, &current_seq, i, counted, orig_alphabet_size);
+                add_count_viterbi(pair_n, &current_seq, i, counted, orig_alphabet_size);
         }
 
         size_t new_alphabet_size = orig_alphabet_size;
@@ -130,7 +130,7 @@ namespace zipHMM {
                 next_seq.push_back( current_seq[0] );
                 // replace every occurrence of max_pair with a new alphabet symbol and count pairs at the same time
                 size_t i = 1; // first position is special because we have not seen any pairs yet.
-                if(matches(max_pair, &current_seq, i)) {
+                if(matches_viterbi(max_pair, &current_seq, i)) {
                     next_seq.push_back(unsigned(new_alphabet_size));
                     ++i;
                 } else {
@@ -138,18 +138,18 @@ namespace zipHMM {
                 }
                 // do the rest of the sequence
                 for(i = i+1; i < current_seq.size() - 1; i++) {
-                    if(matches(max_pair, &current_seq, i)) {
+                    if(matches_viterbi(max_pair, &current_seq, i)) {
                         next_seq.push_back(unsigned(new_alphabet_size));
                         ++i;
                     } else {
                         next_seq.push_back(current_seq[i]);
                     }
 
-                    add_count(pair_n, &next_seq, next_seq.size() - 2, counted, new_alphabet_size + 1);
+                    add_count_viterbi(pair_n, &next_seq, next_seq.size() - 2, counted, new_alphabet_size + 1);
                 }
                 if(i == current_seq.size() - 1) { // push last symbol of sequence
                     next_seq.push_back(current_seq[i]);
-                    add_count(pair_n, &next_seq, next_seq.size() - 2, counted, new_alphabet_size + 1);
+                    add_count_viterbi(pair_n, &next_seq, next_seq.size() - 2, counted, new_alphabet_size + 1);
                 }
             }
 
@@ -199,7 +199,7 @@ namespace zipHMM {
         size_t no_states = A.get_height();
         Matrix res(no_states, 1);
 
-        init_apply_em_prob(res, pi, B, sequence[0]);
+        init_apply_em_prob_viterbi(res, pi, B, sequence[0]);
 
         Matrix tmp;
         for(size_t c = 1; c < sequence.size(); ++c) {
@@ -269,7 +269,7 @@ namespace zipHMM {
                                                          const Matrix &B,
                                                          const size_t alphabet_size) const{
         // compute C matrices for each symbol in the original alphabet
-        make_em_trans_probs_array(symbol2scale, symbol2matrix, A, B);
+        make_em_trans_probs_array_viterbi(symbol2scale, symbol2matrix, A, B);
 
         // compute C matrices for each symbol in the extended alphabet
         for(size_t i = orig_alphabet_size; i < alphabet_size; ++i) {

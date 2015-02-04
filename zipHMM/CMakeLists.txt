@@ -32,6 +32,7 @@ ADD_LIBRARY(zipHMM
   io_utils.cpp
   prob_spaces.cpp
   hmm_utils.cpp
+  hmm_utils_viterbi.cpp
   PThreadProcessingDevice.cpp
   performance_description.cpp
   posterior_decoding.cpp
