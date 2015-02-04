@@ -5,82 +5,136 @@
 #include "PThreadProcessingDevice.hpp"
 #include "performance_description.hpp"
 #include "hmm_utils.hpp"
+#include "ds.hpp"
 
-#include <utility>
-#include <algorithm>
-#include <map>
 #include <vector>
-#include <fstream>
-#include <cstdlib>
 #include <string>
 
 namespace zipHMM {
 
-  class SimpleStopForwarder;
+    class SimpleStopForwarder;
 
-  class Forwarder {
+    class Forwarder {
 
-  protected:
-    size_t orig_seq_length;
-    size_t orig_alphabet_size;
-    std::map<unsigned, s_pair> symbol2pair;
-    std::map<size_t, size_t> nStates2alphabet_size;
-    std::map<size_t, std::vector<std::vector<unsigned> > > nStates2seqs;
-    
-  public:
-    Forwarder() { }
-    ~Forwarder() { }
+    public:
+        Forwarder() { }
+        ~Forwarder() { }
 
-    size_t get_orig_seq_length() const { return orig_seq_length; }
-    size_t get_orig_alphabet_size() const { return orig_alphabet_size; }
-    size_t get_seq_length(size_t no_states) const;
-    size_t get_alphabet_size(size_t no_states) const;
-    s_pair get_pair(unsigned symbol) const;
+        double forward_seqs(const Matrix &pi, const Matrix &A, const Matrix &B) const;
+        double forward_seq(const Matrix &pi, const Matrix &A, const Matrix &B,
+                           const std::vector<unsigned> &sequence, const double *symbol2scale,
+                           const Matrix *symbol2matrix) const;
 
-    double forward_seqs(const Matrix &pi, const Matrix &A, const Matrix &B) const;
-    double forward_seq(const Matrix &pi, const Matrix &A, const Matrix &B, const std::vector<unsigned> &sequence, const double *symbol2scale, const Matrix *symbol2matrix) const;
+        double forward(const Matrix &pi, const Matrix &A, const Matrix &B) const;
 
-    double forward(const Matrix &pi, const Matrix &A, const Matrix &B) const;
-    double pthread_forward(const Matrix &pi, const Matrix &A, const Matrix &B, const std::string &device_filename = DEFAULT_DEVICE_FILENAME) const;
-    double pthread_forward(const Matrix &pi, const Matrix &A, const Matrix &B, const DeviceDescriptor &device_descriptor) const;
-    double mr_pthread_forward(const Matrix &pi, const Matrix &A, const Matrix &B, const DeviceDescriptor &device_descriptor) const;
-    double mr_pthread_forward(const Matrix &pi, const Matrix &A, const Matrix &B, const std::string &device_filename = DEFAULT_DEVICE_FILENAME) const;
+        double pthread_forward(const Matrix &pi, const Matrix &A, const Matrix &B,
+                               const std::string &device_filename = DEFAULT_DEVICE_FILENAME) const;
 
-    void write_to_directory(const std::string &directory) const;
+        double pthread_forward(const Matrix &pi, const Matrix &A, const Matrix &B,
+                               const DeviceDescriptor &device_descriptor) const;
 
-    void init_data_structure(const std::vector<std::vector<unsigned> > &sequences, const size_t alphabet_size, std::vector<size_t> &nStatesSave, const size_t min_no_eval);
+        double mr_pthread_forward(const Matrix &pi, const Matrix &A, const Matrix &B,
+                                  const DeviceDescriptor &device_descriptor) const;
 
-    void read_seq(const std::string &seq_filename, const size_t alphabet_size, const size_t min_no_eval = 1);
-    void read_seq(const std::string &seq_filename, const size_t alphabet_size, std::vector<size_t> &nStatesSave, const size_t min_no_eval = 1);
-    void read_seq(const std::string &seq_filename, const size_t alphabet_size, const size_t no_states, const size_t min_no_eval); // convenient
+        double mr_pthread_forward(const Matrix &pi, const Matrix &A, const Matrix &B,
+                                  const std::string &device_filename = DEFAULT_DEVICE_FILENAME) const;
 
-    void read_seq_directory(const std::string &dir_filename, const size_t alphabet_size, const size_t min_no_eval = 1);
-    void read_seq_directory(const std::string &dir_filename, const size_t alphabet_size, std::vector<size_t> &nStatesSave, const size_t min_no_eval = 1);
-    void read_seq_directory(const std::string &dir_filename, const size_t alphabet_size, const size_t no_states, const size_t min_no_eval);
+        // Legacy methods.
+        size_t get_orig_seq_length() const {
+            return ds.get_orig_seq_length();
+        }
 
-    void read_from_directory(const std::string &dirname);
-    void read_from_directory(const std::string &directory, const size_t no_states);
+        size_t get_orig_alphabet_size() const {
+            return ds.get_orig_alphabet_size();
+        }
 
-  private:
-    void compute_symbol2scale_and_symbol2matrix(Matrix *symbol2matrix, double *symbol2scale, const Matrix &A, const Matrix &B, size_t alphabet_size) const;
-    void pthread_compute_symbol2scale_and_symbol2matrix(double *symbol2scale, Matrix *symbol2matrix, const Matrix &A, const Matrix &B, const size_t alphabet_size, const std::vector<ProcessingDevice*> &devices) const;
-    
-    void write_seqs(const std::string &nstates2seq_absolute_dir_name) const;
-    void write_seq(const std::string &seq_filename, size_t no_states, size_t seq_no) const;
-    void write_seq(std::ofstream &seq_stream, size_t no_states, size_t seq_no) const;
+        size_t get_seq_length(size_t no_states) const {
+            return ds.get_seq_length(no_states);
+        };
 
-    void write_data_structure(const std::string &data_structure_filename) const;
-    void write_data_structure(std::ofstream &data_structure_stream) const;
+        size_t get_alphabet_size(size_t no_states) const {
+            return ds.get_alphabet_size(no_states);
+        };
 
-    void read_data_structure_from_directory(const std::string &directory);
-    void read_data_structure_from_stream(std::ifstream &data_structure_stream);
-    
-    void read_all_seqs(const std::string &directory);
-    void read_no_states_seqs_from_directory(const std::string &no_states_dir, size_t no_states);
-    void read_seq_from_stream(std::ifstream &in, size_t no_states);
+        s_pair get_pair(unsigned symbol) const {
+            return ds.get_pair(symbol);
+        };
 
-  };
-  
+        std::map<unsigned, s_pair> get_symbol2pair() const {
+            return ds.get_symbol2pair();
+        };
+
+        std::map<size_t, size_t> get_nStates2alphabet_size() const {
+            return ds.get_nStates2alphabet_size();
+        };
+
+        std::map<size_t, std::vector<std::vector<unsigned> > > get_nStates2seqs() const {
+            return ds.get_nStates2seqs();
+        };
+
+        void write_to_directory(const std::string &directory) const {
+            return ds.write_to_directory(directory);
+        };
+
+        void init_data_structure(const std::vector<std::vector<unsigned> > &sequences,
+                                 const size_t alphabet_size, std::vector<size_t> &nStatesSave,
+                                 const size_t min_no_eval) {
+            return ds.init_data_structure(sequences, alphabet_size, nStatesSave, min_no_eval);
+        };
+
+        void read_seq(const std::string &seq_filename, const size_t alphabet_size,
+                      const size_t min_no_eval = 1) {
+            return ds.read_seq(seq_filename, alphabet_size, min_no_eval);
+        };
+
+        void read_seq(const std::string &seq_filename, const size_t alphabet_size,
+                      std::vector<size_t> &nStatesSave, const size_t min_no_eval = 1) {
+            return ds.read_seq(seq_filename, alphabet_size, nStatesSave, min_no_eval);
+        };
+
+        void read_seq(const std::string &seq_filename, const size_t alphabet_size,
+                      const size_t no_states, const size_t min_no_eval) {
+            return ds.read_seq(seq_filename, alphabet_size, no_states, min_no_eval);
+        }; // convenient
+
+        void read_seq_directory(const std::string &dir_filename, const size_t alphabet_size,
+                                const size_t min_no_eval = 1) {
+            return ds.read_seq_directory(dir_filename, alphabet_size, min_no_eval);
+        };
+
+        void read_seq_directory(const std::string &dir_filename, const size_t alphabet_size,
+                                std::vector<size_t> &nStatesSave, const size_t min_no_eval = 1) {
+            return ds.read_seq_directory(dir_filename, alphabet_size, nStatesSave, min_no_eval);
+        };
+
+        void read_seq_directory(const std::string &dir_filename, const size_t alphabet_size,
+                                const size_t no_states, const size_t min_no_eval) {
+            return ds.read_seq_directory(dir_filename, alphabet_size, no_states, min_no_eval);
+        };
+
+        void read_from_directory(const std::string &dirname) {
+            return ds.read_from_directory(dirname);
+        };
+
+        void read_from_directory(const std::string &directory, const size_t no_states) {
+            return ds.read_from_directory(directory, no_states);
+        };
+
+    private:
+        DS ds;
+
+        void compute_symbol2scale_and_symbol2matrix(Matrix *symbol2matrix, double *symbol2scale,
+                                                    const Matrix &A, const Matrix &B,
+                                                    size_t alphabet_size) const;
+
+        void pthread_compute_symbol2scale_and_symbol2matrix(double *symbol2scale,
+                                                            Matrix *symbol2matrix,
+                                                            const Matrix &A, const Matrix &B,
+                                                            const size_t alphabet_size,
+                                                            const std::vector<ProcessingDevice*> &devices) const;
+
+    };
+
 }
 
 #endif

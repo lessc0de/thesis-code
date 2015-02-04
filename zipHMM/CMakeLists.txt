@@ -25,6 +25,7 @@ message("-- CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
 ## C++ library
 ADD_LIBRARY(zipHMM
   SHARED
+  ds.cpp
   forwarder.cpp
   matrix.cpp
   seq_io.cpp
