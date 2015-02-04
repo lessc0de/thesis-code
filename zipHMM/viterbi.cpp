@@ -280,7 +280,6 @@ namespace zipHMM {
             Matrix &right_matrix = symbol2matrix[right_symbol];
 
             Matrix::maxMult<LogSpace>(left_matrix, right_matrix, symbol2matrix[i]);
-            // TODO: Forward broken! Fix this!
             symbol2scale[i] = std::log( 1 ) + symbol2scale[left_symbol] + symbol2scale[right_symbol];
             // symbol2scale[i] = std::log( symbol2matrix[i].normalize() ) + symbol2scale[left_symbol] + symbol2scale[right_symbol];
         }

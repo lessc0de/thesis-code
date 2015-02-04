@@ -50,7 +50,6 @@ namespace zipHMM {
       res(i, 0) = std::log(pi(i, 0) * B(i, symbol));
 
     // return res.normalize();
-    // TODO: Forward broken! Fix this!
     return 0;
   }
 
@@ -64,7 +63,6 @@ namespace zipHMM {
     }
 
     // return res.normalize();
-    // TODO: Forward broken! Fix this!
     return 0;
   }
 
