@@ -49,11 +49,10 @@ namespace zipHMM {
                                  const size_t min_no_eval);
 
     private:
-        void compute_symbol2scale_and_symbol2matrix(Matrix *symbol2matrix,
-                                                    double *symbol2scale,
-                                                    const Matrix &A,
-                                                    const Matrix &B,
-                                                    size_t alphabet_size) const;
+        void compute_symbol2matrix(Matrix *symbol2matrix,
+                                   const Matrix &A,
+                                   const Matrix &B,
+                                   size_t alphabet_size) const;
 
     };
 

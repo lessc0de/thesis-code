@@ -246,10 +246,9 @@ namespace zipHMM {
             alphabet_size = nStates2alphabet_size.rbegin()->second;
         }
 
-        double *symbol2scale = new double[alphabet_size];
         Matrix *symbol2matrix = new Matrix[alphabet_size];
 
-        compute_symbol2scale_and_symbol2matrix(symbol2matrix, symbol2scale, A, B, alphabet_size);
+        compute_symbol2matrix(symbol2matrix, A, B, alphabet_size);
 
         double ll = 0.0;
         for(std::vector<std::vector<unsigned> >::const_iterator it = sequences->begin(); it != sequences->end(); ++it) {
@@ -257,17 +256,15 @@ namespace zipHMM {
             ll += viterbi_seq(pi, A, B, sequence, symbol2matrix);
         }
 
-        delete[] symbol2scale;
         delete[] symbol2matrix;
 
         return ll;
     }
 
-    void Viterbi::compute_symbol2scale_and_symbol2matrix(Matrix *symbol2matrix,
-                                                         double *symbol2scale,
-                                                         const Matrix &A,
-                                                         const Matrix &B,
-                                                         const size_t alphabet_size) const{
+    void Viterbi::compute_symbol2matrix(Matrix *symbol2matrix,
+                                        const Matrix &A,
+                                        const Matrix &B,
+                                        const size_t alphabet_size) const{
         // compute C matrices for each symbol in the original alphabet
         make_em_trans_log_probs_array(symbol2matrix, A, B);
 
@@ -280,8 +277,6 @@ namespace zipHMM {
             Matrix &right_matrix = symbol2matrix[right_symbol];
 
             Matrix::maxMult<LogSpace>(left_matrix, right_matrix, symbol2matrix[i]);
-            symbol2scale[i] = std::log( 1 ) + symbol2scale[left_symbol] + symbol2scale[right_symbol];
-            // symbol2scale[i] = std::log( symbol2matrix[i].normalize() ) + symbol2scale[left_symbol] + symbol2scale[right_symbol];
         }
     }
 
