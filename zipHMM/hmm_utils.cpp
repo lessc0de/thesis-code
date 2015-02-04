@@ -47,7 +47,7 @@ namespace zipHMM {
     res.reset(nStates, 1);
 
     for(size_t i = 0; i < nStates; ++i)
-      res(i, 0) = pi(i, 0) * B(i, symbol);
+      res(i, 0) = std::log(pi(i, 0) * B(i, symbol));
 
     // return res.normalize();
     // TODO: Forward broken! Fix this!

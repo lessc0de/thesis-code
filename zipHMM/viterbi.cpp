@@ -200,9 +200,7 @@ namespace zipHMM {
         size_t no_states = A.get_height();
         Matrix res(no_states, 1);
 
-        for(size_t r = 0; r < no_states; ++r) {
-            res(r, 0) = std::log(pi(r, 0) * B(r, sequence[0]));
-        }
+        init_apply_em_prob(res, pi, B, sequence[0]);
 
         Matrix tmp;
         for(size_t c = 1; c < sequence.size(); ++c) {
