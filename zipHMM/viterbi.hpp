@@ -2,7 +2,7 @@
 #define VITERBI_HPP
 
 #include "matrix.hpp"
-#include "hmm_utils_viterbi.hpp"
+#include "hmm_utils.hpp"
 
 #include <vector>
 #include <map>

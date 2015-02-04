@@ -70,4 +70,28 @@ namespace zipHMM {
     }
   }
 
+  void init_apply_em_log_prob(Matrix &res, const Matrix &pi, const Matrix &B, const unsigned symbol) {
+    const size_t nStates = pi.get_height();
+    res.reset(nStates, 1);
+
+    for(size_t i = 0; i < nStates; ++i)
+      res(i, 0) = std::log(pi(i, 0) * B(i, symbol));
+  }
+
+  void apply_em_log_prob(Matrix &res, const Matrix &A, const Matrix &B, const unsigned symbol) {
+    const size_t nStates = A.get_height();
+    res.reset(nStates, nStates);
+
+    for(size_t r = 0; r < nStates; ++r) {
+      for(size_t c = 0; c < nStates; ++c)
+	res(r, c) = std::log(A(c, r) * B(r, symbol));
+    }
+  }
+
+  void make_em_trans_log_probs_array(Matrix *symbol2matrix, const Matrix &A, const Matrix &B) {
+    for(size_t i = 0; i < B.get_width(); ++i) {
+      apply_em_log_prob(symbol2matrix[unsigned(i)], A, B, unsigned(i));
+    }
+  }
+
 }
