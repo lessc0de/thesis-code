@@ -18,10 +18,15 @@ namespace zipHMM {
 
         double viterbi_seq(const Matrix &pi, const Matrix &A, const Matrix &B,
                            const std::vector<unsigned> &sequence,
-                           const Matrix *symbol2matrix) const;
-
+                           const Matrix *symbol2matrix,
+                           const Matrix *symbol2matrixR,
+                           const bool compute_path,
+                           std::vector<unsigned> &viterbi_path) const;
 
         double viterbi(const Matrix &pi, const Matrix &A, const Matrix &B) const;
+
+        double viterbi(const Matrix &pi, const Matrix &A, const Matrix &B,
+                       std::vector<unsigned> &viterbi_path) const;
 
         // Legacy methods.
         size_t get_orig_seq_length() const {
@@ -107,9 +112,17 @@ namespace zipHMM {
     private:
         DS ds;
         void compute_symbol2matrix(Matrix *symbol2matrix,
+                                   Matrix *symbol2matrixR,
                                    const Matrix &A,
                                    const Matrix &B,
                                    size_t alphabet_size) const;
+
+        std::pair<std::vector<unsigned>, std::vector<unsigned> > deducted_path(const std::vector<unsigned> &sequence,
+                                                                               const std::vector<unsigned> &path,
+                                                                               const Matrix *symbol2matrixR) const;
+
+        double viterbi_helper(const Matrix &pi, const Matrix &A, const Matrix &B,
+                              const bool compute_path, std::vector<unsigned> &viterbi_path) const;
 
     };
 
