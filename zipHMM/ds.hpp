@@ -14,11 +14,12 @@ namespace zipHMM {
         size_t orig_alphabet_size;
         std::map<unsigned, s_pair> symbol2pair;
         std::map<size_t, size_t> nStates2alphabet_size;
-        std::map<size_t, std::vector<std::vector<unsigned> > > nStates2seqs;
 
     public:
         DS() { };
         ~DS() { };
+
+        std::map<size_t, std::vector<std::vector<unsigned> > > nStates2seqs;
 
         size_t get_orig_seq_length() const { return orig_seq_length; }
         size_t get_orig_alphabet_size() const { return orig_alphabet_size; }

@@ -54,7 +54,7 @@ namespace zipHMM {
         size_t no_states = A.get_width();
         size_t alphabet_size = 0;
         std::vector<std::vector< unsigned> > sequences;
-        for(std::map<size_t, std::vector<std::vector<unsigned> > >::const_iterator it = ds.get_nStates2seqs().begin(); it != ds.get_nStates2seqs().end(); ++it) {
+        for(std::map<size_t, std::vector<std::vector<unsigned> > >::const_iterator it = ds.nStates2seqs.begin(); it != ds.nStates2seqs.end(); ++it) {
             if(it->first >= no_states) {
                 sequences = it->second;
                 alphabet_size = ds.get_nStates2alphabet_size().find(it->first)->second;
