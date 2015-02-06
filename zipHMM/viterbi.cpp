@@ -2,6 +2,7 @@
 #include "matrix.hpp"
 #include "seq_io.hpp"
 #include "prob_spaces.hpp"
+#include "timer.hpp"
 
 #include <vector>
 #include <algorithm>
@@ -13,6 +14,7 @@
 #include <map>
 #include <iostream>
 #include <cstdlib>
+#include <list>
 
 namespace zipHMM {
 
@@ -56,14 +58,6 @@ namespace zipHMM {
             Matrix::copy(tmp, res);
         }
 
-        // double path_ll = res(0, 0);
-        // for(size_t r = 1; r < no_states; ++r) {
-        //     if(res(r, 0) > path_ll) {
-        //         path_ll = res(r, 0);
-        //     }
-        // }
-        // return path_ll;
-
         // backtrack
         double path_ll = res(0, 0);
         size_t end_point = 0;
@@ -82,49 +76,54 @@ namespace zipHMM {
                 viterbi_path[c - 1] = viterbi_table(c, viterbi_path[c]);
             }
 
-            // Try to recreate the original sequence and Viterbi path.
-            std::vector<unsigned> orig_seq = sequence;
-            std::vector<unsigned> orig_path = viterbi_path;
-            while (orig_seq.size() < ds.get_orig_seq_length()) {
-                std::pair<std::vector<unsigned>, std::vector<unsigned> > p;
-                p = deducted_path(orig_seq, orig_path, symbol2argmax_matrix);
-                orig_seq = p.first;
-                orig_path = p.second;
-            }
-            viterbi_path = orig_path;
+            // Recreate the original Viterbi path.
+            deduct_path(sequence, viterbi_path, symbol2argmax_matrix);
         }
 
         return path_ll;
     }
 
-    std::pair<std::vector<unsigned>, std::vector<unsigned> > Viterbi::deducted_path(const std::vector<unsigned> &sequence,
-                                                                                    const std::vector<unsigned> &path,
-                                                                                    const Matrix *symbol2argmax_matrix) const {
-        std::vector<unsigned> orig_sequence;
-        std::vector<unsigned> path_sequence;
+    void Viterbi::deduct_path(const std::vector<unsigned> &sequence,
+                              std::vector<unsigned> &path,
+                              const Matrix *symbol2argmax_matrix) const {
+        // Convert the vectors to lists.
+        std::list<unsigned> orig_seq(sequence.begin(), sequence.end());
+        std::list<unsigned> orig_path(path.begin(), path.end());
 
-        orig_sequence.push_back(sequence[0]);
-        path_sequence.push_back(path[0]);
+        // Iterate through the list. Insert/delete symbols.
+        std::map<unsigned, s_pair> symbol2pair = ds.get_symbol2pair();
+        std::list<unsigned>::iterator seq_it = orig_seq.begin();
+        std::list<unsigned>::iterator path_it = orig_path.begin();
+        while (seq_it != orig_seq.end()) {
+            // Check if character at this position is an extended character.
+            if (*seq_it >= ds.get_orig_alphabet_size()) {
+                // Insert the state in the list.
+                --path_it;
+                unsigned prev_state = *path_it;
+                ++path_it;
+                unsigned next_state = *path_it;
+                unsigned current_state = symbol2argmax_matrix[*seq_it](prev_state, next_state);
+                orig_path.insert(path_it, current_state);
+                --path_it;
 
-        for (size_t c = 1; c < sequence.size(); ++c) {
-            if (sequence[c] >= ds.get_orig_alphabet_size()) {
-                // This is a character added during compression.
-                std::pair<size_t, size_t> p = ds.get_symbol2pair()[sequence[c]];
-                orig_sequence.push_back(p.first);
-                orig_sequence.push_back(p.second);
-
-                unsigned prev_state = path[c - 1];
-                unsigned next_state = path[c];
-                path_sequence.push_back(symbol2argmax_matrix[sequence[c]](prev_state, next_state));
-                path_sequence.push_back(path[c]);
+                // Insert the symbol in the list.
+                std::pair<size_t, size_t> p = symbol2pair[*seq_it];
+                orig_seq.insert(seq_it, p.first);
+                orig_seq.insert(seq_it, p.second);
+                orig_seq.erase(seq_it);
+                --seq_it;
+                --seq_it;
             } else {
-                orig_sequence.push_back(sequence[c]);
-                path_sequence.push_back(path[c]);
+                ++seq_it;
+                ++path_it;
             }
         }
-        return std::make_pair(orig_sequence, path_sequence);
-    }
 
+        // Convert the list to vectors.
+        path.clear();
+        path.insert(path.begin(), orig_path.begin(), orig_path.end());
+
+    }
 
     double Viterbi::viterbi_helper(const Matrix &pi, const Matrix &A, const Matrix &B, const bool compute_path, std::vector<unsigned> &viterbi_path) const {
         if(pi.get_width() != 1 || pi.get_height() != A.get_width() || A.get_height() != A.get_width() ||
@@ -191,8 +190,9 @@ namespace zipHMM {
         make_em_trans_log_probs_array(symbol2matrix, A, B);
 
         // compute C matrices for each symbol in the extended alphabet
+        std::map<unsigned, s_pair> symbol2pair = ds.get_symbol2pair();
         for(size_t i = ds.get_orig_alphabet_size(); i < alphabet_size; ++i) {
-            const s_pair symbol_pair = ds.get_symbol2pair().find(unsigned(i))->second;
+            const s_pair symbol_pair = symbol2pair.find(unsigned(i))->second;
             const unsigned left_symbol = symbol_pair.second; // the multiplication is done in the reverse direction of the sequence
             const unsigned right_symbol  = symbol_pair.first;
             Matrix &left_matrix  = symbol2matrix[left_symbol];

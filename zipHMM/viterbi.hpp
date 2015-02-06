@@ -117,9 +117,9 @@ namespace zipHMM {
                                    const Matrix &B,
                                    size_t alphabet_size) const;
 
-        std::pair<std::vector<unsigned>, std::vector<unsigned> > deducted_path(const std::vector<unsigned> &sequence,
-                                                                               const std::vector<unsigned> &path,
-                                                                               const Matrix *symbol2matrixR) const;
+        void deduct_path(const std::vector<unsigned> &sequence,
+                         std::vector<unsigned> &path,
+                         const Matrix *symbol2matrixR) const;
 
         double viterbi_helper(const Matrix &pi, const Matrix &A, const Matrix &B,
                               const bool compute_path, std::vector<unsigned> &viterbi_path) const;
