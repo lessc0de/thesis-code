@@ -24,16 +24,16 @@
 #include "../fasta/fasta_reader.hpp"
 #include "../zipHMM/forwarder.hpp"
 #include "../zipHMM/timer.hpp"
+#include "../zipHMM/seq_io.hpp"
 
 #include <string>
 #include <iomanip>
-
-#ifdef WITH_OMP
-#include<omp.h>
 #include <vector>
 #include <iostream>
 #include <cstdlib>
 
+#ifdef WITH_OMP
+#include<omp.h>
 #endif
 
 std::vector<unsigned> read_sequence(char *path) {
@@ -61,37 +61,63 @@ std::vector<unsigned> read_sequence(char *path) {
     return obs_array;
 }
 
+bool valid_path(std::vector<unsigned> &sequence, std::vector<unsigned> &path,
+                double likelihood, zipHMM::Matrix &init_probs,
+                zipHMM::Matrix &trans_probs, zipHMM::Matrix &em_probs) {
+    // Init
+    double l = std::log(init_probs(path[0], 0) * em_probs(path[0], sequence[0]));
+
+    // Recursion
+    for (size_t c = 1; c < sequence.size(); ++c) {
+        l += std::log(trans_probs(path[c - 1], path[c]) * em_probs(path[c], sequence[c]));
+    }
+
+    return std::abs(l - likelihood) < 1e-3;
+}
+
 int main(int argc, char **argv) {
     if (argc != 3) {
         std::cout << "Please provide HMM model and fasta file." << std::endl;
         exit(1);
     }
 
-    std::vector<unsigned> viterbi_path(1883377);
+    // Read HMM.
     zipHMM::Matrix init_probs;
     zipHMM::Matrix trans_probs;
     zipHMM::Matrix em_probs;
-
     zipHMM::read_HMM(init_probs, trans_probs, em_probs, std::string(argv[1]));
 
     std::string sequence = std::string(argv[2]);
 
+    std::vector<unsigned> ref_viterbi_path;
     zipHMM::Timer ref_timer;
     ref_timer.start();
-    double res = zipHMM::viterbi(sequence, init_probs, trans_probs, em_probs, viterbi_path);
+    double res = zipHMM::viterbi(sequence, init_probs, trans_probs, em_probs, ref_viterbi_path);
     ref_timer.stop();
     std::cout << "Reference:\t" << res << "\t" << ref_timer.timeElapsed() << std::endl;
 
 
+    std::vector<unsigned> my_viterbi_path;
     zipHMM::Viterbi v;
     size_t alphabet_size = 4;
     size_t min_num_of_evals = 500;
     zipHMM::Timer comp_timer;
     comp_timer.start();
     v.read_seq(sequence, alphabet_size, min_num_of_evals);
-    double my_new_res = v.viterbi(init_probs, trans_probs, em_probs);
+    double my_new_res = v.viterbi(init_probs, trans_probs, em_probs, my_viterbi_path);
     comp_timer.stop();
     std::cout << "My new impl.:\t" << my_new_res << "\t" << comp_timer.timeElapsed() << std::endl;
+
+    if (std::abs(res - my_new_res) > 1e-3) {
+        std::cout << "Likelihoods not identical!" << std::endl;
+        exit(1);
+    }
+    std::vector<unsigned> seq;
+    zipHMM::readSeq(seq, sequence);
+    if (!valid_path(seq, my_viterbi_path, my_new_res, init_probs, trans_probs, em_probs)) {
+        std::cout << "Viterbi paths not identical!" << std::endl;
+        exit(2);
+    }
 
     exit(0);
 }
