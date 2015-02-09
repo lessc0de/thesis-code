@@ -87,12 +87,12 @@ int main(int argc, char **argv) {
     zipHMM::Matrix em_probs;
     zipHMM::read_HMM(init_probs, trans_probs, em_probs, std::string(argv[1]));
 
-    std::string sequence = std::string(argv[2]);
+    std::string sequence_filename = argv[2];
 
     std::vector<unsigned> ref_viterbi_path;
     zipHMM::Timer ref_timer;
     ref_timer.start();
-    double res = zipHMM::viterbi(sequence, init_probs, trans_probs, em_probs, ref_viterbi_path);
+    double res = zipHMM::viterbi(sequence_filename, init_probs, trans_probs, em_probs, ref_viterbi_path);
     ref_timer.stop();
     std::cout << "Reference:\t" << res << "\t" << ref_timer.timeElapsed() << std::endl;
 
@@ -103,7 +103,7 @@ int main(int argc, char **argv) {
     size_t min_num_of_evals = 500;
     zipHMM::Timer comp_timer;
     comp_timer.start();
-    v.read_seq(sequence, alphabet_size, min_num_of_evals);
+    v.read_seq(sequence_filename, alphabet_size, min_num_of_evals);
     double my_new_res = v.viterbi(init_probs, trans_probs, em_probs, my_viterbi_path);
     comp_timer.stop();
     std::cout << "My new impl.:\t" << my_new_res << "\t" << comp_timer.timeElapsed() << std::endl;
@@ -113,7 +113,7 @@ int main(int argc, char **argv) {
         exit(1);
     }
     std::vector<unsigned> seq;
-    zipHMM::readSeq(seq, sequence);
+    zipHMM::readSeq(seq, sequence_filename);
     if (!valid_path(seq, my_viterbi_path, my_new_res, init_probs, trans_probs, em_probs)) {
         std::cout << "Viterbi paths not identical!" << std::endl;
         exit(2);
