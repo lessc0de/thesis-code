@@ -5,3 +5,6 @@ target_link_libraries(hmm_experiments fasta_reader hmm_reader)
 
 add_executable(hmm_experiments_new hmm_experiments_new.cpp)
 target_link_libraries(hmm_experiments_new zipHMM fasta_reader)
+
+add_executable(complexity complexity.cpp)
+target_link_libraries(complexity zipHMM)
