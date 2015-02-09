@@ -27,20 +27,19 @@ namespace zipHMM {
         size_t no_states = A.get_height();
         Matrix res(no_states, 1);
 
+        // Save paths in this table.
         Matrix viterbi_table(sequence.size(), no_states);
 
+        // Init.
         init_apply_em_log_prob(res, pi, B, sequence[0]);
 
-        // // Copy to Viterbi table.
-        // for (size_t i = 0; i < no_states; ++i) {
-        //     viterbi_table(i, 0) = res(i, 0);
-        // }
-
+        // Recursion.
         Matrix tmp;
         for(size_t c = 1; c < sequence.size(); ++c) {
+            // Compute log likelihood for each cell in column.
             Matrix::maxMult<LogSpace>(symbol2matrix[sequence[c]], res, tmp);
 
-            // For each state i, from which state j did we come from?
+            // Compute path for each cell in column.
             Matrix where;
             where.reset(symbol2matrix[sequence[c]].get_height(), res.get_width());
             for(size_t l = 0; l < symbol2matrix[sequence[c]].get_height(); ++l) {
@@ -58,7 +57,7 @@ namespace zipHMM {
             Matrix::copy(tmp, res);
         }
 
-        // backtrack
+        // Find the end point with the largest log likelihood.
         double path_ll = res(0, 0);
         size_t end_point = 0;
         for(size_t r = 1; r < no_states; ++r) {
@@ -68,6 +67,7 @@ namespace zipHMM {
             }
         }
 
+        // Backtrack.
         if (compute_path) {
             viterbi_path.resize(sequence.size());
             viterbi_path[sequence.size() - 1] = unsigned(end_point);
