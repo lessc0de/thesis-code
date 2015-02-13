@@ -71,6 +71,8 @@ int main(int argc, char **argv) {
     // Simple
     {
         std::cout << n << " ";
+        std::cout.flush();
+
         simple_pre_timer.start();
         simple_pre_timer.stop();
         std::cout << simple_pre_timer.timeElapsed() << " ";
@@ -79,6 +81,7 @@ int main(int argc, char **argv) {
         zipHMM::viterbi(sequence_filename, init_probs, trans_probs, em_probs, viterbi_path);
         simple_running_timer.stop();
         std::cout << simple_running_timer.timeElapsed() << " ";
+        std::cout.flush();
     }
 
     // zipHMMlib uncompressed
@@ -90,11 +93,13 @@ int main(int argc, char **argv) {
         v1.read_seq(sequence_filename, alphabet_size, min_num_of_evals);
         zipHMMlib_uncompressed_pre_timer.stop();
         std::cout << zipHMMlib_uncompressed_pre_timer.timeElapsed() << " ";
+        std::cout.flush();
 
         zipHMMlib_uncompressed_running_timer.start();
         v1.viterbi(init_probs, trans_probs, em_probs);
         zipHMMlib_uncompressed_running_timer.stop();
         std::cout << zipHMMlib_uncompressed_running_timer.timeElapsed() << " ";
+        std::cout.flush();
     }
 
     // zipHMMlib uncompressed path
@@ -106,11 +111,13 @@ int main(int argc, char **argv) {
         v1.read_seq(sequence_filename, alphabet_size, min_num_of_evals);
         zipHMMlib_uncompressed_path_pre_timer.stop();
         std::cout << zipHMMlib_uncompressed_path_pre_timer.timeElapsed() << " ";
+        std::cout.flush();
 
         zipHMMlib_uncompressed_path_running_timer.start();
         v1.viterbi(init_probs, trans_probs, em_probs, viterbi_path);
         zipHMMlib_uncompressed_path_running_timer.stop();
         std::cout << zipHMMlib_uncompressed_path_running_timer.timeElapsed() << " ";
+        std::cout.flush();
     }
 
     // zipHMMlib
@@ -122,11 +129,13 @@ int main(int argc, char **argv) {
         v.read_seq(sequence_filename, alphabet_size, min_num_of_evals);
         zipHMMlib_pre_timer.stop();
         std::cout << zipHMMlib_pre_timer.timeElapsed() << " ";
+        std::cout.flush();
 
         zipHMMlib_running_timer.start();
         v.viterbi(init_probs, trans_probs, em_probs);
         zipHMMlib_running_timer.stop();
         std::cout << zipHMMlib_running_timer.timeElapsed() << " ";
+        std::cout.flush();
     }
 
     // zipHMMlib_path
@@ -138,13 +147,16 @@ int main(int argc, char **argv) {
         v2.read_seq(sequence_filename, alphabet_size, min_num_of_evals);
         zipHMMlib_path_pre_timer.stop();
         std::cout << zipHMMlib_path_pre_timer.timeElapsed() << " ";
+        std::cout.flush();
 
         zipHMMlib_path_running_timer.start();
         v2.viterbi(init_probs, trans_probs, em_probs, viterbi_path);
         zipHMMlib_path_running_timer.stop();
         std::cout << zipHMMlib_path_running_timer.timeElapsed() << " ";
+        std::cout.flush();
 
         std::cout << std::endl;
+        std::cout.flush();
     }
     std::cout.flush();
     exit(0);

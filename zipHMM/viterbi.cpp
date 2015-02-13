@@ -186,7 +186,9 @@ namespace zipHMM {
         stage_1_time += stage_1_timer.timeElapsed();
 
         std::cout << stage_1_time << " ";
+        std::cout.flush();
         std::cout << stage_2_time << " ";
+        std::cout.flush();
 
         return ll;
     }
