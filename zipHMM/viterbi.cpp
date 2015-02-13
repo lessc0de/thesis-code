@@ -40,20 +40,21 @@ namespace zipHMM {
             Matrix::maxMult<LogSpace>(symbol2matrix[sequence[c]], res, tmp);
 
             // Compute path for each cell in column.
-            Matrix where;
-            where.reset(symbol2matrix[sequence[c]].get_height(), res.get_width());
-            for(size_t l = 0; l < symbol2matrix[sequence[c]].get_height(); ++l) {
-                for(size_t r = 0; r < res.get_width(); ++r) {
-                    // Find the best k
-                    size_t k = Matrix::argMaxMult<LogSpace>(symbol2matrix[sequence[c]], l, res, r);
-                    where(l, r) = k;
+            if (compute_path) {
+                Matrix where;
+                where.reset(symbol2matrix[sequence[c]].get_height(), res.get_width());
+                for(size_t l = 0; l < symbol2matrix[sequence[c]].get_height(); ++l) {
+                    for(size_t r = 0; r < res.get_width(); ++r) {
+                        // Find the best k
+                        size_t k = Matrix::argMaxMult<LogSpace>(symbol2matrix[sequence[c]], l, res, r);
+                        where(l, r) = k;
+                    }
+                }
+
+                for (size_t i = 0; i < no_states; ++i) {
+                    viterbi_table(c, i) = where(i, 0);
                 }
             }
-
-            for (size_t i = 0; i < no_states; ++i) {
-                viterbi_table(c, i) = where(i, 0);
-            }
-
             Matrix::copy(tmp, res);
         }
 
@@ -154,19 +155,38 @@ namespace zipHMM {
             alphabet_size = ds.get_nStates2alphabet_size().rbegin()->second;
         }
 
+        zipHMM::Timer stage_1_timer;
+        zipHMM::Timer stage_2_timer;
+        double stage_1_time = 0;
+        double stage_2_time = 0;
+        stage_1_timer.start();
         Matrix *symbol2matrix = new Matrix[alphabet_size];
         Matrix *symbol2argmax_matrix = new Matrix[alphabet_size];
 
         compute_symbol2matrix(symbol2matrix, symbol2argmax_matrix, A, B, alphabet_size);
 
+        stage_1_timer.stop();
+        stage_1_time += stage_1_timer.timeElapsed();
+
+        stage_2_timer.start();
         double ll = 0.0;
         for(std::vector<std::vector<unsigned> >::const_iterator it = sequences.begin(); it != sequences.end(); ++it) {
             const std::vector<unsigned> &sequence = (*it);
             ll += viterbi_seq(pi, A, B, sequence, symbol2matrix, symbol2argmax_matrix, compute_path, viterbi_path);
         }
+        stage_2_timer.stop();
+        stage_2_time += stage_2_timer.timeElapsed();
+
+        stage_1_timer.start();
 
         delete[] symbol2matrix;
         delete[] symbol2argmax_matrix;
+
+        stage_1_timer.stop();
+        stage_1_time += stage_1_timer.timeElapsed();
+
+        std::cout << stage_1_time << " ";
+        std::cout << stage_2_time << " ";
 
         return ll;
     }
