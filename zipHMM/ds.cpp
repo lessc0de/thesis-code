@@ -129,6 +129,15 @@ namespace zipHMM {
             return;
         }
 
+        // If min_no_eval is set to 0, don't do any compression at all.
+        if (min_no_eval == 0) {
+            nStates2seqs[2] = *current_seqs_p; // copying sequences
+            nStates2alphabet_size[2] = orig_alphabet_size;
+            delete prev_seqs_p;
+            delete current_seqs_p;
+            return;
+        }
+
         iteration_timer.start();
 
         // count each pair of symbols across the original sequence
