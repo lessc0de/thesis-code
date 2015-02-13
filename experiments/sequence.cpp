@@ -152,10 +152,7 @@ int main(int argc, char **argv) {
         zipHMMlib_path_running_timer.start();
         v2.viterbi(init_probs, trans_probs, em_probs, viterbi_path);
         zipHMMlib_path_running_timer.stop();
-        std::cout << zipHMMlib_path_running_timer.timeElapsed() << " ";
-        std::cout.flush();
-
-        std::cout << std::endl;
+        std::cout << zipHMMlib_path_running_timer.timeElapsed() << std::endl;
         std::cout.flush();
     }
     std::cout.flush();
