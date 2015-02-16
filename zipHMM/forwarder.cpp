@@ -44,16 +44,16 @@ namespace zipHMM {
     // find alphabet and seqs for given number of states
     size_t no_states = A.get_width();
     size_t alphabet_size = 0;
-    const std::vector<std::vector< unsigned> > *sequences = 0;
-    for(std::map<size_t, std::vector<std::vector<unsigned> > >::const_iterator it = ds.get_nStates2seqs().begin(); it != ds.get_nStates2seqs().end(); ++it) {
+    std::vector<std::vector< unsigned> > sequences;
+    for(std::map<size_t, std::vector<std::vector<unsigned> > >::const_iterator it = ds.nStates2seqs.begin(); it != ds.nStates2seqs.end(); ++it) {
       if(it->first >= no_states) {
-	sequences = &(it->second);
+	sequences = it->second;
 	alphabet_size = ds.get_nStates2alphabet_size().find(it->first)->second;
 	break;
       }
     }
-    if(sequences == 0) {
-      sequences = &(ds.get_nStates2seqs().rbegin()->second);
+    if(sequences.empty()) {
+      sequences = ds.get_nStates2seqs().rbegin()->second;
       alphabet_size = ds.get_nStates2alphabet_size().rbegin()->second;
     }
 
@@ -63,7 +63,7 @@ namespace zipHMM {
     compute_symbol2scale_and_symbol2matrix(symbol2matrix, symbol2scale, A, B, alphabet_size);
 
     double ll = 0.0;
-    for(std::vector<std::vector<unsigned> >::const_iterator it = sequences->begin(); it != sequences->end(); ++it) {
+    for(std::vector<std::vector<unsigned> >::const_iterator it = sequences.begin(); it != sequences.end(); ++it) {
       const std::vector<unsigned> &sequence = (*it);
       ll += forward_seq(pi, A, B, sequence, symbol2scale, symbol2matrix);
     }
