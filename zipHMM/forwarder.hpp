@@ -20,12 +20,14 @@ namespace zipHMM {
         Forwarder() { }
         ~Forwarder() { }
 
-        double forward_seqs(const Matrix &pi, const Matrix &A, const Matrix &B) const;
+        double forward_seqs(const Matrix &pi, const Matrix &A, const Matrix &B, std::vector<double> &scales) const;
         double forward_seq(const Matrix &pi, const Matrix &A, const Matrix &B,
                            const std::vector<unsigned> &sequence, const double *symbol2scale,
-                           const Matrix *symbol2matrix) const;
+                           const Matrix *symbol2matrix, std::vector<double> &scales) const;
 
         double forward(const Matrix &pi, const Matrix &A, const Matrix &B) const;
+
+        double forward(const Matrix &pi, const Matrix &A, const Matrix &B, std::vector<double> &scales) const;
 
         double pthread_forward(const Matrix &pi, const Matrix &A, const Matrix &B,
                                const std::string &device_filename = DEFAULT_DEVICE_FILENAME) const;

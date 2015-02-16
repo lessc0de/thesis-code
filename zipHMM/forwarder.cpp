@@ -28,6 +28,52 @@
 namespace zipHMM {
 
 
+  double Forwarder::forward(const Matrix &pi, const Matrix &A, const Matrix &B, std::vector<double> &scales) const {
+    if(pi.get_width() != 1 || pi.get_height() != A.get_width() || A.get_height() != A.get_width() ||
+       B.get_height() != A.get_width() || B.get_width() != ds.get_orig_alphabet_size()) {
+      std::cerr << "Dimensions of input matrices do not match:" << std::endl;
+      std::cerr << "\t" << "pi width:  " << pi.get_width()  << std::endl;
+      std::cerr << "\t" << "pi height: " << pi.get_height() << std::endl;
+      std::cerr << "\t" << "A width:  "  << A.get_width()   << std::endl;
+      std::cerr << "\t" << "A height: "  << A.get_height()  << std::endl;
+      std::cerr << "\t" << "B width:  "  << B.get_width()   << std::endl;
+      std::cerr << "\t" << "B height: "  << B.get_height()  << std::endl;
+      std::exit(-1);
+    }
+
+    // find alphabet and seqs for given number of states
+    size_t no_states = A.get_width();
+    size_t alphabet_size = 0;
+    std::vector<std::vector< unsigned> > sequences;
+    for(std::map<size_t, std::vector<std::vector<unsigned> > >::const_iterator it = ds.nStates2seqs.begin(); it != ds.nStates2seqs.end(); ++it) {
+      if(it->first >= no_states) {
+	sequences = it->second;
+	alphabet_size = ds.get_nStates2alphabet_size().find(it->first)->second;
+	break;
+      }
+    }
+    if(sequences.empty()) {
+      sequences = ds.get_nStates2seqs().rbegin()->second;
+      alphabet_size = ds.get_nStates2alphabet_size().rbegin()->second;
+    }
+
+    double *symbol2scale = new double[alphabet_size];
+    Matrix *symbol2matrix = new Matrix[alphabet_size];
+
+    compute_symbol2scale_and_symbol2matrix(symbol2matrix, symbol2scale, A, B, alphabet_size);
+
+    double ll = 0.0;
+    for(std::vector<std::vector<unsigned> >::const_iterator it = sequences.begin(); it != sequences.end(); ++it) {
+      const std::vector<unsigned> &sequence = (*it);
+      ll += forward_seq(pi, A, B, sequence, symbol2scale, symbol2matrix, scales);
+    }
+
+    delete[] symbol2scale;
+    delete[] symbol2matrix;
+
+    return ll;
+  }
+
   double Forwarder::forward(const Matrix &pi, const Matrix &A, const Matrix &B) const {
     if(pi.get_width() != 1 || pi.get_height() != A.get_width() || A.get_height() != A.get_width() ||
        B.get_height() != A.get_width() || B.get_width() != ds.get_orig_alphabet_size()) {
@@ -65,7 +111,8 @@ namespace zipHMM {
     double ll = 0.0;
     for(std::vector<std::vector<unsigned> >::const_iterator it = sequences.begin(); it != sequences.end(); ++it) {
       const std::vector<unsigned> &sequence = (*it);
-      ll += forward_seq(pi, A, B, sequence, symbol2scale, symbol2matrix);
+      std::vector<double> scales;
+      ll += forward_seq(pi, A, B, sequence, symbol2scale, symbol2matrix, scales);
     }
 
     delete[] symbol2scale;
@@ -74,8 +121,7 @@ namespace zipHMM {
     return ll;
   }
 
-  double Forwarder::forward_seq(const Matrix &pi, const Matrix &A, const Matrix &B, const std::vector<unsigned> &sequence, const double *symbol2scale, const Matrix *symbol2matrix) const {
-    std::deque<double> scales;
+  double Forwarder::forward_seq(const Matrix &pi, const Matrix &A, const Matrix &B, const std::vector<unsigned> &sequence, const double *symbol2scale, const Matrix *symbol2matrix, std::vector<double> &scales) const {
     Matrix res;
     Matrix tmp;
     double loglikelihood = 0;
@@ -88,12 +134,11 @@ namespace zipHMM {
       Matrix::blas_matrix_vector_mult(symbol2matrix[sequence[i]], res, tmp);
       Matrix::copy(tmp, res);
 
-      scales.push_back( std::log(res.normalize()) );
-      scales.push_back( symbol2scale[sequence[i]] );
+      scales.push_back( std::log(res.normalize()) + symbol2scale[sequence[i]] );
     }
 
     // compute loglikelihood by summing log of scales
-    for(std::deque<double>::iterator it = scales.begin(); it != scales.end(); ++it) {
+    for(std::vector<double>::iterator it = scales.begin(); it != scales.end(); ++it) {
       loglikelihood += (*it);
     }
 
