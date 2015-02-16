@@ -14,3 +14,9 @@ target_link_libraries(model zipHMM)
 
 add_executable(sequence sequence.cpp)
 target_link_libraries(sequence zipHMM)
+
+add_executable(backward backward.cpp)
+target_link_libraries(backward zipHMM)
+
+add_executable(forward_experiment forward.cpp)
+target_link_libraries(forward_experiment zipHMM)
