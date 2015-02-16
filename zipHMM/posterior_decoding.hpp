@@ -6,7 +6,7 @@
 #include <vector>
 
 namespace zipHMM {
-  
+
   void posterior_decoding(const std::vector<unsigned> &seq,
 			  const Matrix &pi,
 			  const Matrix &A,
@@ -32,6 +32,18 @@ namespace zipHMM {
 			  const Matrix &A,
 			  const Matrix &B,
 			  Matrix &pd_table);
+
+  // Added only for experimenting with a new backward. Should be removed again.
+  void forward(Matrix &forward_table,
+	       std::vector<double> &scales,
+	       const Matrix &pi, const Matrix &A, const Matrix&B,
+	       const std::vector<unsigned> &seq);
+
+  void backward(Matrix &backward_table,
+		const Matrix &pi, const Matrix &A, const Matrix&B,
+		const std::vector<unsigned> &seq,
+		const std::vector<double> &scales,
+		const Matrix &forward_table);
 
 }
 
