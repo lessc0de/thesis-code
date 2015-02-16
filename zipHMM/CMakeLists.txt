@@ -37,6 +37,7 @@ ADD_LIBRARY(zipHMM
   performance_description.cpp
   posterior_decoding.cpp
   viterbi.cpp
+  backwarder.cpp
   test_utils.cpp
   calibrate.cpp
   debug.cpp)
