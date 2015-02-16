@@ -19,6 +19,8 @@ namespace zipHMM {
   double apply_em_prob(Matrix &res, const Matrix &A, const Matrix &B, const unsigned symbol);
   void make_em_trans_probs_array(double *symbol2scale, Matrix *symbol2matrix, const Matrix &A, const Matrix &B);
 
+  void make_em_trans_probs_array(Matrix *symbol2matrix, const Matrix &A, const Matrix &B);
+
   void init_apply_em_log_prob(Matrix &res, const Matrix &pi, const Matrix &B, const unsigned symbol);
   void apply_em_log_prob(Matrix &res, const Matrix &A, const Matrix &B, const unsigned symbol);
   void make_em_trans_log_probs_array(Matrix *symbol2matrix, const Matrix &A, const Matrix &B);
