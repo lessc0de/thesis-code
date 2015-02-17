@@ -125,6 +125,8 @@ namespace zipHMM {
     private:
         DS ds;
 
+        double forward_helper(const Matrix &pi, const Matrix &A, const Matrix &B, std::vector<double> &scales) const;
+
         void compute_symbol2scale_and_symbol2matrix(Matrix *symbol2matrix, double *symbol2scale,
                                                     const Matrix &A, const Matrix &B,
                                                     size_t alphabet_size) const;
