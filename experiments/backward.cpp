@@ -83,7 +83,7 @@ int main(int argc, char **argv) {
         zipHMM::Forwarder f;
         std::vector<double> scales;
         int alphabet_size = 4;
-        int min_num_of_evals = 0;
+        int min_num_of_evals = 500;
         f.read_seq(seq_filename, alphabet_size, min_num_of_evals);
         f.forward(pi, A, B, scales);
 
