@@ -24,7 +24,7 @@
 namespace zipHMM {
 
 
-  double Forwarder::forward_helper(const Matrix &pi, const Matrix &A, const Matrix &B, std::vector<double> &scales) const {
+  double Forwarder::forward_helper(const Matrix &pi, const Matrix &A, const Matrix &B, std::vector<double> &scales, bool compute_path, Matrix &forward_table) const {
     if(pi.get_width() != 1 || pi.get_height() != A.get_width() || A.get_height() != A.get_width() ||
        B.get_height() != A.get_width() || B.get_width() != ds.get_orig_alphabet_size()) {
       std::cerr << "Dimensions of input matrices do not match:" << std::endl;
@@ -61,7 +61,7 @@ namespace zipHMM {
     double ll = 0.0;
     for(std::vector<std::vector<unsigned> >::const_iterator it = sequences.begin(); it != sequences.end(); ++it) {
       const std::vector<unsigned> &sequence = (*it);
-      ll += forward_seq(pi, A, B, sequence, symbol2scale, symbol2matrix, scales);
+      ll += forward_seq(pi, A, B, sequence, symbol2scale, symbol2matrix, scales, compute_path, forward_table);
     }
 
     delete[] symbol2scale;
@@ -72,25 +72,47 @@ namespace zipHMM {
 
   double Forwarder::forward(const Matrix &pi, const Matrix &A, const Matrix &B) const {
     std::vector<double> scales;
-    return Forwarder::forward_helper(pi, A, B, scales);
+    Matrix forward_table;
+    return Forwarder::forward_helper(pi, A, B, scales, false, forward_table);
   }
 
   double Forwarder::forward(const Matrix &pi, const Matrix &A, const Matrix &B, std::vector<double> &scales) const {
-    return Forwarder::forward_helper(pi, A, B, scales);
+    Matrix forward_table;
+    return Forwarder::forward_helper(pi, A, B, scales, false, forward_table);
   }
 
-  double Forwarder::forward_seq(const Matrix &pi, const Matrix &A, const Matrix &B, const std::vector<unsigned> &sequence, const double *symbol2scale, const Matrix *symbol2matrix, std::vector<double> &scales) const {
+  double Forwarder::forward(const Matrix &pi, const Matrix &A, const Matrix &B, std::vector<double> &scales, Matrix &forward_table) const {
+    return Forwarder::forward_helper(pi, A, B, scales, true, forward_table);
+  }
+
+  double Forwarder::forward_seq(const Matrix &pi, const Matrix &A, const Matrix &B, const std::vector<unsigned> &sequence, const double *symbol2scale, const Matrix *symbol2matrix, std::vector<double> &scales, bool compute_table, Matrix &forward_table) const {
     Matrix res;
     Matrix tmp;
     double loglikelihood = 0;
+    unsigned no_states = A.get_width();
+
+    if (compute_table) {
+      forward_table.reset(no_states, sequence.size());
+    }
 
     // compute C_1 and push corresponding scale
     scales.push_back( std::log(init_apply_em_prob(res, pi, B, sequence[0])) );
+    if (compute_table) {
+      for (size_t j = 0; j < no_states; ++j) {
+        forward_table(j, 0) = res(j, 0);
+      }
+    }
 
     // multiply matrices across the sequence
     for(size_t i = 1; i < sequence.size(); ++i) {
       Matrix::blas_matrix_vector_mult(symbol2matrix[sequence[i]], res, tmp);
       Matrix::copy(tmp, res);
+
+      if (compute_table) {
+        for (size_t j = 0; j < no_states; ++j) {
+          forward_table(j, i) = res(j, 0);
+        }
+      }
 
       scales.push_back( std::log(res.normalize()) + symbol2scale[sequence[i]] );
     }

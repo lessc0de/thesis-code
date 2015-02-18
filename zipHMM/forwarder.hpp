@@ -23,11 +23,13 @@ namespace zipHMM {
         double forward_seqs(const Matrix &pi, const Matrix &A, const Matrix &B, std::vector<double> &scales) const;
         double forward_seq(const Matrix &pi, const Matrix &A, const Matrix &B,
                            const std::vector<unsigned> &sequence, const double *symbol2scale,
-                           const Matrix *symbol2matrix, std::vector<double> &scales) const;
+                           const Matrix *symbol2matrix, std::vector<double> &scales, bool compute_matrix, Matrix &forward_table) const;
 
         double forward(const Matrix &pi, const Matrix &A, const Matrix &B) const;
 
         double forward(const Matrix &pi, const Matrix &A, const Matrix &B, std::vector<double> &scales) const;
+
+        double forward(const Matrix &pi, const Matrix &A, const Matrix &B, std::vector<double> &scales, Matrix &forward_table) const;
 
         double pthread_forward(const Matrix &pi, const Matrix &A, const Matrix &B,
                                const std::string &device_filename = DEFAULT_DEVICE_FILENAME) const;
@@ -125,7 +127,7 @@ namespace zipHMM {
     private:
         DS ds;
 
-        double forward_helper(const Matrix &pi, const Matrix &A, const Matrix &B, std::vector<double> &scales) const;
+        double forward_helper(const Matrix &pi, const Matrix &A, const Matrix &B, std::vector<double> &scales, bool compute_path, Matrix &forward_table) const;
 
         void compute_symbol2scale_and_symbol2matrix(Matrix *symbol2matrix, double *symbol2scale,
                                                     const Matrix &A, const Matrix &B,
