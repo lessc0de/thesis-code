@@ -20,3 +20,6 @@ target_link_libraries(backward zipHMM)
 
 add_executable(forward_experiment forward.cpp)
 target_link_libraries(forward_experiment zipHMM)
+
+add_executable(posterior posterior.cpp)
+target_link_libraries(posterior zipHMM)
