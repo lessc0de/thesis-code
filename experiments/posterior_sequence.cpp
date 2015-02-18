@@ -40,37 +40,46 @@
 #endif
 
 int main(int argc, char **argv) {
-    if (argc != 3) {
-        std::cout << "Please provide HMM model and fasta file." << std::endl;
+    if (argc != 4) {
+        std::cerr << "Usage: model sequence n." << std::endl;
         exit(1);
     }
+
+    std::string hmm_filename = argv[1];
+
+    std::string seq_filename = argv[2];
+
+    int n = atof(argv[3]);
 
     // Read HMM.
     zipHMM::Matrix pi;
     zipHMM::Matrix A;
     zipHMM::Matrix B;
-    zipHMM::read_HMM(pi, A, B, std::string(argv[1]));
+    zipHMM::read_HMM(pi, A, B, hmm_filename);
 
-    std::string seq_filename = argv[2];
+    // Run experiment.
+    zipHMM::Timer simple_timer;
+    zipHMM::Timer zipHMMlib_timer;
 
-    // Reference implementation.
+    // Simple
     {
+        std::cout << n << " ";
+
+        simple_timer.start();
+
         zipHMM::Matrix pd_table;
         std::vector<double> scales;
         std::vector<unsigned> pd_path;
-
         zipHMM::posterior_decoding(seq_filename, pi, A, B, pd_path, pd_table);
 
-        for (size_t i = 0; i < pd_path.size(); ++i) {
-            std::cout << pd_path[i] << " ";
-        }
-        std::cout << std::endl;
+        simple_timer.stop();
+        std::cout << simple_timer.timeElapsed() << " ";
     }
 
-    std::cout << std::endl;
-
-    // zipHMM implementation
+    // zipHMMlib
     {
+        zipHMMlib_timer.start();
+
         std::vector<double> scales;
         zipHMM::Matrix forward_table;
         zipHMM::Matrix backward_table;
@@ -78,7 +87,7 @@ int main(int argc, char **argv) {
         // Compute forward table.
         zipHMM::HMMSuite f;
         int alphabet_size = 4;
-        int min_num_of_evals = 500;
+        int min_num_of_evals = 0;
         f.read_seq(seq_filename, alphabet_size, min_num_of_evals);
         f.forward(pi, A, B, scales, forward_table);
 
@@ -112,10 +121,8 @@ int main(int argc, char **argv) {
             pd_path[c] = unsigned(max_state);
         }
 
-        for (size_t i = 0; i < pd_path.size(); ++i) {
-            std::cout << pd_path[i] << " ";
-        }
-        std::cout << std::endl;
+        zipHMMlib_timer.stop();
+        std::cout << zipHMMlib_timer.timeElapsed() << std::endl;
     }
 
     exit(0);

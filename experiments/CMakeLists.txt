@@ -23,3 +23,9 @@ target_link_libraries(forward_experiment zipHMM)
 
 add_executable(posterior posterior.cpp)
 target_link_libraries(posterior zipHMM)
+
+add_executable(posterior_sequence posterior_sequence.cpp)
+target_link_libraries(posterior_sequence zipHMM)
+
+add_executable(posterior_model posterior_model.cpp)
+target_link_libraries(posterior_model zipHMM)

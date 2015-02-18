@@ -21,56 +21,65 @@
 
 #include "../zipHMM/viterbi.hpp"
 #include "../zipHMM/hmm_io.hpp"
-#include "../fasta/fasta_reader.hpp"
 #include "../zipHMM/timer.hpp"
 #include "../zipHMM/seq_io.hpp"
-#include "../zipHMM/posterior_decoding.hpp"
-#include "../zipHMM/matrix.hpp"
 #include "../zipHMM/hmm_suite.hpp"
+#include "../zipHMM/posterior_decoding.hpp"
 
 #include <string>
 #include <iomanip>
 #include <vector>
 #include <iostream>
 #include <cstdlib>
+#include <sstream>
 #include <cmath>
 
 #ifdef WITH_OMP
 #include<omp.h>
+
 #endif
 
 int main(int argc, char **argv) {
-    if (argc != 3) {
-        std::cout << "Please provide HMM model and fasta file." << std::endl;
+    if (argc != 4) {
+        std::cerr << "Usage: sequence model_folder k." << std::endl;
         exit(1);
     }
+
+    std::string seq_filename = argv[1];
+
+    std::string data_folder = argv[2];
+    std::stringstream s;
+    s << data_folder << argv[3] << ".hmm";
+    std::string hmm_filename = s.str();
+
+    int k = atof(argv[3]);
 
     // Read HMM.
     zipHMM::Matrix pi;
     zipHMM::Matrix A;
     zipHMM::Matrix B;
-    zipHMM::read_HMM(pi, A, B, std::string(argv[1]));
+    zipHMM::read_HMM(pi, A, B, hmm_filename);
 
-    std::string seq_filename = argv[2];
+    // Run experiment.
+    zipHMM::Timer simple_timer;
+    zipHMM::Timer zipHMMlib_timer;
 
-    // Reference implementation.
+    // Simple
     {
+        simple_timer.start();
+
         zipHMM::Matrix pd_table;
         std::vector<double> scales;
         std::vector<unsigned> pd_path;
-
         zipHMM::posterior_decoding(seq_filename, pi, A, B, pd_path, pd_table);
 
-        for (size_t i = 0; i < pd_path.size(); ++i) {
-            std::cout << pd_path[i] << " ";
-        }
-        std::cout << std::endl;
+        simple_timer.stop();
     }
 
-    std::cout << std::endl;
-
-    // zipHMM implementation
+    // zipHMMlib
     {
+        zipHMMlib_timer.start();
+
         std::vector<double> scales;
         zipHMM::Matrix forward_table;
         zipHMM::Matrix backward_table;
@@ -78,7 +87,7 @@ int main(int argc, char **argv) {
         // Compute forward table.
         zipHMM::HMMSuite f;
         int alphabet_size = 4;
-        int min_num_of_evals = 500;
+        int min_num_of_evals = 0;
         f.read_seq(seq_filename, alphabet_size, min_num_of_evals);
         f.forward(pi, A, B, scales, forward_table);
 
@@ -112,11 +121,11 @@ int main(int argc, char **argv) {
             pd_path[c] = unsigned(max_state);
         }
 
-        for (size_t i = 0; i < pd_path.size(); ++i) {
-            std::cout << pd_path[i] << " ";
-        }
-        std::cout << std::endl;
+        zipHMMlib_timer.stop();
     }
 
+    std::cout << k << " "
+              << simple_timer.timeElapsed() << " "
+              << zipHMMlib_timer.timeElapsed() << std::endl;
     exit(0);
 }
