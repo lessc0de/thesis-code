@@ -85,7 +85,7 @@ namespace zipHMM {
       res(0, i) = 1.0;
     }
     for (size_t j = 0; j < no_states; ++j) {
-      backward_table(j, length - 1) = res(j, 0);
+      backward_table(j, length - 1) = res(0, j);
     }
 
     // multiply matrices across the sequence
@@ -94,7 +94,7 @@ namespace zipHMM {
       Matrix::copy(tmp, res);
 
       for (size_t j = 0; j < no_states; ++j) {
-        backward_table(j, c) = res(j, 0);
+        backward_table(j, c) = res(0, j);
       }
 
       // Scale the values in res using the scales vector.
