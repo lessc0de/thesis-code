@@ -20,12 +20,11 @@ namespace zipHMM {
         Backwarder() { }
         ~Backwarder() { }
 
-        double backward_seqs(const Matrix &pi, const Matrix &A, const Matrix &B, const std::vector<double> &scales) const;
-        double backward_seq(const Matrix &pi, const Matrix &A, const Matrix &B,
+        void backward_seq(const Matrix &pi, const Matrix &A, const Matrix &B,
                             const std::vector<unsigned> &sequence, const std::vector<double> &scales,
-                            const Matrix *symbol2matrix) const;
+                            const Matrix *symbol2matrix, Matrix &backward_table) const;
 
-        double backward(const Matrix &pi, const Matrix &A, const Matrix &B, const std::vector<double> &scales) const;
+        void backward(const Matrix &pi, const Matrix &A, const Matrix &B, const std::vector<double> &scales, Matrix &backward_table) const;
 
         // Legacy methods.
         size_t get_orig_seq_length() const {

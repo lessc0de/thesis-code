@@ -28,7 +28,7 @@
 namespace zipHMM {
 
 
-  double Backwarder::backward(const Matrix &pi, const Matrix &A, const Matrix &B, const std::vector<double> &scales) const {
+  void Backwarder::backward(const Matrix &pi, const Matrix &A, const Matrix &B, const std::vector<double> &scales, Matrix &backward_table) const {
     if(pi.get_width() != 1 || pi.get_height() != A.get_width() || A.get_height() != A.get_width() ||
        B.get_height() != A.get_width() || B.get_width() != ds.get_orig_alphabet_size()) {
       std::cerr << "Dimensions of input matrices do not match:" << std::endl;
@@ -62,29 +62,30 @@ namespace zipHMM {
 
     compute_symbol2scale_and_symbol2matrix(symbol2matrix, symbol2scale, A, B, alphabet_size);
 
-    double ll = 0.0;
     for(std::vector<std::vector<unsigned> >::const_iterator it = sequences.begin(); it != sequences.end(); ++it) {
       const std::vector<unsigned> &sequence = (*it);
-      ll += backward_seq(pi, A, B, sequence, scales, symbol2matrix);
+      backward_seq(pi, A, B, sequence, scales, symbol2matrix, backward_table);
     }
 
     delete[] symbol2scale;
     delete[] symbol2matrix;
-
-    return ll;
   }
 
-  double Backwarder::backward_seq(const Matrix &pi, const Matrix &A, const Matrix &B, const std::vector<unsigned> &sequence, const std::vector<double> &scales, const Matrix *symbol2matrix) const {
+  void Backwarder::backward_seq(const Matrix &pi, const Matrix &A, const Matrix &B, const std::vector<unsigned> &sequence, const std::vector<double> &scales, const Matrix *symbol2matrix, Matrix &backward_table) const {
     Matrix res;
     Matrix tmp;
-    double loglikelihood = 0;
+    size_t no_states = A.get_height();
 
     size_t length = sequence.size();
+    backward_table.reset(no_states, length);
 
     // Initialize
     res.reset(1, A.get_width());
     for (size_t i = 0; i < res.get_width(); ++i) {
       res(0, i) = 1.0;
+    }
+    for (size_t j = 0; j < no_states; ++j) {
+      backward_table(j, length - 1) = res(j, 0);
     }
 
     // multiply matrices across the sequence
@@ -92,26 +93,16 @@ namespace zipHMM {
       Matrix::blas_mult(res, symbol2matrix[sequence[c + 1]], tmp);
       Matrix::copy(tmp, res);
 
+      for (size_t j = 0; j < no_states; ++j) {
+        backward_table(j, c) = res(j, 0);
+      }
+
       // Scale the values in res using the scales vector.
       for (size_t j = 0; j < res.get_width(); ++j) {
         res(0, j) /= std::exp(scales[c+1]);
       }
 
     }
-
-
-    // compute loglikelihood by summing log of scales
-    for(std::vector<double>::const_iterator it = scales.begin(); it != scales.end(); ++it) {
-      loglikelihood += (*it);
-    }
-
-    std::cout << "First column:" << std::endl;
-    for (size_t i = 0; i < res.get_width(); ++i) {
-      std::cout << res(0, i) << " ";
-    }
-    std::cout << std::endl;
-
-    return loglikelihood;
   }
 
   void Backwarder::compute_symbol2scale_and_symbol2matrix(Matrix *symbol2matrix, double *symbol2scale, const Matrix &A, const Matrix &B, const size_t alphabet_size) const{
