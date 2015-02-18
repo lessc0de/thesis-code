@@ -25,7 +25,6 @@ message("-- CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
 ## C++ library
 ADD_LIBRARY(zipHMM
   SHARED
-  ds.cpp
   forwarder.cpp
   matrix.cpp
   seq_io.cpp
@@ -36,8 +35,8 @@ ADD_LIBRARY(zipHMM
   PThreadProcessingDevice.cpp
   performance_description.cpp
   posterior_decoding.cpp
+  hmm_suite.cpp
   viterbi.cpp
-  backwarder.cpp
   test_utils.cpp
   calibrate.cpp
   debug.cpp)

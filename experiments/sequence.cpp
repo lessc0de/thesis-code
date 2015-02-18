@@ -23,6 +23,7 @@
 #include "../zipHMM/hmm_io.hpp"
 #include "../zipHMM/timer.hpp"
 #include "../zipHMM/seq_io.hpp"
+#include "../zipHMM/hmm_suite.hpp"
 
 #include <string>
 #include <iomanip>
@@ -87,7 +88,7 @@ int main(int argc, char **argv) {
     // zipHMMlib uncompressed
     {
         zipHMMlib_uncompressed_pre_timer.start();
-        zipHMM::Viterbi v1;
+        zipHMM::HMMSuite v1;
         size_t alphabet_size = 4;
         size_t min_num_of_evals = 0;
         v1.read_seq(sequence_filename, alphabet_size, min_num_of_evals);
@@ -105,7 +106,7 @@ int main(int argc, char **argv) {
     // zipHMMlib uncompressed path
     {
         zipHMMlib_uncompressed_path_pre_timer.start();
-        zipHMM::Viterbi v1;
+        zipHMM::HMMSuite v1;
         size_t alphabet_size = 4;
         size_t min_num_of_evals = 0;
         v1.read_seq(sequence_filename, alphabet_size, min_num_of_evals);
@@ -123,7 +124,7 @@ int main(int argc, char **argv) {
     // zipHMMlib
     {
         zipHMMlib_pre_timer.start();
-        zipHMM::Viterbi v;
+        zipHMM::HMMSuite v;
         size_t alphabet_size = 4;
         size_t min_num_of_evals = 500;
         v.read_seq(sequence_filename, alphabet_size, min_num_of_evals);
@@ -141,7 +142,7 @@ int main(int argc, char **argv) {
     // zipHMMlib_path
     {
         zipHMMlib_path_pre_timer.start();
-        zipHMM::Viterbi v2;
+        zipHMM::HMMSuite v2;
         size_t alphabet_size = 4;
         size_t min_num_of_evals = 500;
         v2.read_seq(sequence_filename, alphabet_size, min_num_of_evals);

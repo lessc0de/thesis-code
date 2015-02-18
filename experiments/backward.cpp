@@ -22,12 +22,11 @@
 #include "../zipHMM/viterbi.hpp"
 #include "../zipHMM/hmm_io.hpp"
 #include "../fasta/fasta_reader.hpp"
-#include "../zipHMM/forwarder.hpp"
 #include "../zipHMM/timer.hpp"
 #include "../zipHMM/seq_io.hpp"
 #include "../zipHMM/posterior_decoding.hpp"
 #include "../zipHMM/matrix.hpp"
-#include "../zipHMM/backwarder.hpp"
+#include "../zipHMM/hmm_suite.hpp"
 
 #include <string>
 #include <iomanip>
@@ -80,7 +79,7 @@ int main(int argc, char **argv) {
 
     // zipHMM implementation
     {
-        zipHMM::Forwarder f;
+        zipHMM::HMMSuite f;
         std::vector<double> scales;
         int alphabet_size = 4;
         int min_num_of_evals = 0;
@@ -93,7 +92,7 @@ int main(int argc, char **argv) {
         // }
         // std::cout << std::endl;
 
-        zipHMM::Backwarder b;
+        zipHMM::HMMSuite b;
         b.read_seq(seq_filename, alphabet_size, min_num_of_evals);
         zipHMM::Matrix backward_table;
         b.backward(pi, A, B, scales, backward_table);

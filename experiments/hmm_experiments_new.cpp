@@ -25,6 +25,7 @@
 #include "../zipHMM/forwarder.hpp"
 #include "../zipHMM/timer.hpp"
 #include "../zipHMM/seq_io.hpp"
+#include "../zipHMM/hmm_suite.hpp"
 
 #include <string>
 #include <iomanip>
@@ -98,13 +99,13 @@ int main(int argc, char **argv) {
 
 
     std::vector<unsigned> my_viterbi_path;
-    zipHMM::Viterbi v;
+    zipHMM::HMMSuite h;
     size_t alphabet_size = 4;
     size_t min_num_of_evals = 500;
     zipHMM::Timer comp_timer;
     comp_timer.start();
-    v.read_seq(sequence_filename, alphabet_size, min_num_of_evals);
-    double my_new_res = v.viterbi(init_probs, trans_probs, em_probs, my_viterbi_path);
+    h.read_seq(sequence_filename, alphabet_size, min_num_of_evals);
+    double my_new_res = h.viterbi(init_probs, trans_probs, em_probs, my_viterbi_path);
     comp_timer.stop();
     std::cout << "My new impl.:\t" << my_new_res << "\t" << comp_timer.timeElapsed() << std::endl;
 
