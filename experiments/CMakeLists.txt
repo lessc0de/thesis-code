@@ -29,3 +29,5 @@ target_link_libraries(posterior_sequence zipHMM)
 
 add_executable(posterior_model posterior_model.cpp)
 target_link_libraries(posterior_model zipHMM)
+
+add_executable(gen_fibonacci gen_fibonacci.cpp)
