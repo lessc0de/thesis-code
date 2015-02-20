@@ -39,8 +39,8 @@
 #endif
 
 int main(int argc, char **argv) {
-    if (argc != 4) {
-        std::cerr << "Usage: model sequence n." << std::endl;
+    if (argc != 5) {
+        std::cerr << "Usage: model sequence n alphabet_size." << std::endl;
         exit(1);
     }
 
@@ -49,6 +49,8 @@ int main(int argc, char **argv) {
     std::string sequence_filename = argv[2];
 
     int n = atof(argv[3]);
+
+    size_t alphabet_size = atoi(argv[4]);
 
     // Read HMM.
     zipHMM::Matrix init_probs;
@@ -89,7 +91,6 @@ int main(int argc, char **argv) {
     {
         zipHMMlib_uncompressed_pre_timer.start();
         zipHMM::HMMSuite v1;
-        size_t alphabet_size = 4;
         size_t min_num_of_evals = 0;
         v1.read_seq(sequence_filename, alphabet_size, min_num_of_evals);
         zipHMMlib_uncompressed_pre_timer.stop();
@@ -107,7 +108,6 @@ int main(int argc, char **argv) {
     {
         zipHMMlib_uncompressed_path_pre_timer.start();
         zipHMM::HMMSuite v1;
-        size_t alphabet_size = 4;
         size_t min_num_of_evals = 0;
         v1.read_seq(sequence_filename, alphabet_size, min_num_of_evals);
         zipHMMlib_uncompressed_path_pre_timer.stop();
@@ -125,7 +125,6 @@ int main(int argc, char **argv) {
     {
         zipHMMlib_pre_timer.start();
         zipHMM::HMMSuite v;
-        size_t alphabet_size = 4;
         size_t min_num_of_evals = 500;
         v.read_seq(sequence_filename, alphabet_size, min_num_of_evals);
         zipHMMlib_pre_timer.stop();
@@ -143,7 +142,6 @@ int main(int argc, char **argv) {
     {
         zipHMMlib_path_pre_timer.start();
         zipHMM::HMMSuite v2;
-        size_t alphabet_size = 4;
         size_t min_num_of_evals = 500;
         v2.read_seq(sequence_filename, alphabet_size, min_num_of_evals);
         zipHMMlib_path_pre_timer.stop();
