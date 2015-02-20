@@ -151,8 +151,9 @@ int main(int argc, char **argv) {
         zipHMMlib_path_running_timer.start();
         v2.viterbi(init_probs, trans_probs, em_probs, viterbi_path);
         zipHMMlib_path_running_timer.stop();
-        std::cout << zipHMMlib_path_running_timer.timeElapsed() << std::endl;
-        std::cout.flush();
+        std::cout << zipHMMlib_path_running_timer.timeElapsed() << " ";
+
+        std::cout << v2.get_orig_seq_length() / (float) v2.get_seq_length(init_probs.get_height()) << std::endl;
     }
     std::cout.flush();
     exit(0);
