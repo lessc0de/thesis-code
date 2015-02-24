@@ -113,6 +113,14 @@ int main(int argc, char **argv) {
         std::cout << "Likelihoods not identical!" << std::endl;
         exit(1);
     }
+
+    if (ref_viterbi_path.size() != my_viterbi_path.size()) {
+        std::cout << "Viterbi paths do not have the same length!" << std::endl
+                  << "Reference: " << ref_viterbi_path.size() << std::endl
+                  << "zipHMMlib: " << my_viterbi_path.size() << std::endl;
+        exit(3);
+    }
+
     std::vector<unsigned> seq;
     zipHMM::readSeq(seq, sequence_filename);
     if (!valid_path(seq, my_viterbi_path, my_new_res, init_probs, trans_probs, em_probs)) {
