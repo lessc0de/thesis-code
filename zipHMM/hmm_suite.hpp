@@ -67,6 +67,9 @@ namespace zipHMM {
         double viterbi(const Matrix &pi, const Matrix &A, const Matrix &B,
                        std::vector<unsigned> &viterbi_path) const;
 
+        void posterior_decoding(const Matrix &pi, const Matrix &A, const Matrix &B,
+                                std::vector<unsigned> &posterior_path) const;
+
         size_t get_orig_seq_length() const { return orig_seq_length; }
         size_t get_orig_alphabet_size() const { return orig_alphabet_size; }
         size_t get_seq_length(size_t no_states) const;

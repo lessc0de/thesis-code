@@ -80,46 +80,13 @@ int main(int argc, char **argv) {
     {
         zipHMMlib_timer.start();
 
-        std::vector<double> scales;
-        zipHMM::Matrix forward_table;
-        zipHMM::Matrix backward_table;
-
-        // Compute forward table.
         zipHMM::HMMSuite f;
         int alphabet_size = 4;
         int min_num_of_evals = 0;
         f.read_seq(seq_filename, alphabet_size, min_num_of_evals);
-        f.forward(pi, A, B, scales, forward_table);
 
-        // Compute backward table.
-        f.backward(pi, A, B, scales, backward_table);
-
-        // Compute posterior decoding table.
-        zipHMM::Matrix pd_table;
-        std::vector<unsigned> seq;
-        zipHMM::readSeq(seq, seq_filename);
-
-        size_t no_states = A.get_height();
-        size_t length = seq.size();
-        pd_table.reset(no_states, length);
-        for(size_t r = 0; r < no_states; ++r) {
-            for(size_t c = 0; c < length; ++c) {
-                pd_table(r, c) = forward_table(r, c) * backward_table(r, c);
-            }
-        }
-
-        // Compute path.
         std::vector<unsigned> pd_path;
-        pd_path.resize(length);
-        for(size_t c = 0; c < length; ++c) {
-            size_t max_state = 0;
-            for(size_t r = 1; r < no_states; ++r) {
-                if(pd_table(r, c) > pd_table(max_state, c))
-                    max_state = r;
-            }
-
-            pd_path[c] = unsigned(max_state);
-        }
+        f.posterior_decoding(pi, A, B, pd_path);
 
         zipHMMlib_timer.stop();
         std::cout << zipHMMlib_timer.timeElapsed() << std::endl;

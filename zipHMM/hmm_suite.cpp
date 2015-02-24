@@ -24,9 +24,43 @@
 #include <deque>
 #include <fstream>
 #include <list>
+#include <limits>
 
 
 namespace zipHMM {
+
+    void HMMSuite::posterior_decoding(const Matrix &pi, const Matrix &A, const Matrix &B,
+                                      std::vector<unsigned> &posterior_path) const {
+        if (get_alphabet_size(A.get_height()) != get_orig_alphabet_size()) {
+            std::cerr << "Sequence has been compressed. You will get the posterior decoding of the compressed sequence." << std::endl;
+        }
+        std::vector<double> scales;
+        zipHMM::Matrix forward_table;
+        zipHMM::Matrix backward_table;
+
+        // Compute forward table.
+        forward(pi, A, B, scales, forward_table);
+
+        // Compute backward table.
+        backward(pi, A, B, scales, backward_table);
+
+        // Compute posterior decoding
+        size_t no_states = A.get_height();
+        size_t length = get_orig_seq_length();
+        posterior_path.resize(length);
+        for(size_t c = 0; c < length; ++c) {
+            double max_val = - std::numeric_limits<double>::max();
+            size_t max_state = 0;
+            for(size_t r = 0; r < no_states; ++r) {
+                double val = forward_table(r, c) * backward_table(r, c);
+                if (val > max_val) {
+                    max_val = val;
+                    max_state = r;
+                }
+            }
+            posterior_path[c] = unsigned(max_state);
+        }
+    }
 
 
     double HMMSuite::viterbi_seq(const Matrix &pi, const Matrix &A, const Matrix &B,
