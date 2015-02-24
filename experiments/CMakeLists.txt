@@ -31,3 +31,6 @@ add_executable(posterior_model posterior_model.cpp)
 target_link_libraries(posterior_model zipHMM)
 
 add_executable(gen_fibonacci gen_fibonacci.cpp)
+
+add_executable(profile_viterbi profile_viterbi.cpp)
+target_link_libraries(profile_viterbi zipHMM profiler)
