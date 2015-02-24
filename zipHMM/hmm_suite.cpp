@@ -223,7 +223,6 @@ namespace zipHMM {
         make_em_trans_log_probs_array(symbol2matrix, A, B);
 
         // compute C matrices for each symbol in the extended alphabet
-        std::map<unsigned, s_pair> symbol2pair = symbol2pair;
         for(size_t i = orig_alphabet_size; i < alphabet_size; ++i) {
             const s_pair symbol_pair = symbol2pair.find(unsigned(i))->second;
             const unsigned left_symbol = symbol_pair.second; // the multiplication is done in the reverse direction of the sequence
