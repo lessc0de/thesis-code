@@ -221,6 +221,31 @@ namespace zipHMM {
 
         template<typename Space>
         static inline
+        void argMaxAndMaxMult(const Matrix &lhs, const Matrix &rhs, Matrix &res, Matrix &argmax_res) {
+            const size_t depth = lhs.width;
+
+            res.reset(lhs.height, rhs.width);
+            argmax_res.reset(lhs.height, rhs.width);
+
+            for(size_t i = 0; i < lhs.height; ++i) {
+                for(size_t j = 0; j < rhs.width; ++j) {
+                    double val = Space::mult(lhs(i, 0), rhs(0, j));
+                    size_t max_k = 0;
+                    for(size_t k = 1; k < depth; ++k) {
+                        double newVal = Space::mult(lhs(i, k), rhs(k, j));
+                        if(newVal > val) {
+                            val = newVal;
+                            max_k = k;
+                        }
+                    }
+                    res(i, j) = val;
+                    argmax_res(i, j) = max_k;
+                }
+            }
+        }
+
+        template<typename Space>
+        static inline
         void maxMult(const Matrix &lhs, const Matrix &rhs, Matrix &res) {
             const size_t depth = lhs.width;
 

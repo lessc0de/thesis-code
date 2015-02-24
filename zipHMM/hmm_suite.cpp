@@ -47,24 +47,14 @@ namespace zipHMM {
         // Recursion.
         Matrix tmp;
         for(size_t c = 1; c < sequence.size(); ++c) {
-            // Compute log likelihood for each cell in column.
-            Matrix::maxMult<LogSpace>(symbol2matrix[sequence[c]], res, tmp);
-
-            // Compute path for each cell in column.
             if (compute_path) {
                 Matrix where;
-                where.reset(symbol2matrix[sequence[c]].get_height(), res.get_width());
-                for(size_t l = 0; l < symbol2matrix[sequence[c]].get_height(); ++l) {
-                    for(size_t r = 0; r < res.get_width(); ++r) {
-                        // Find the best k
-                        size_t k = Matrix::argMaxMult<LogSpace>(symbol2matrix[sequence[c]], l, res, r);
-                        where(l, r) = k;
-                    }
-                }
-
+                Matrix::argMaxAndMaxMult<LogSpace>(symbol2matrix[sequence[c]], res, tmp, where);
                 for (size_t i = 0; i < no_states; ++i) {
                     viterbi_table(c, i) = where(i, 0);
                 }
+            } else {
+                Matrix::maxMult<LogSpace>(symbol2matrix[sequence[c]], res, tmp);
             }
             Matrix::copy(tmp, res);
         }
