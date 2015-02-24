@@ -103,7 +103,6 @@ namespace zipHMM {
         std::list<unsigned> orig_path(path.begin(), path.end());
 
         // Iterate through the list. Insert/delete symbols.
-        std::map<unsigned, s_pair> symbol2pair = symbol2pair;
         std::list<unsigned>::iterator seq_it = orig_seq.begin();
         std::list<unsigned>::iterator path_it = orig_path.begin();
         while (seq_it != orig_seq.end()) {
@@ -119,12 +118,13 @@ namespace zipHMM {
                 --path_it;
 
                 // Insert the symbol in the list.
-                std::pair<size_t, size_t> p = symbol2pair[*seq_it];
+                std::pair<size_t, size_t> p = get_pair(*seq_it);
                 orig_seq.insert(seq_it, p.first);
                 orig_seq.insert(seq_it, p.second);
-                orig_seq.erase(seq_it);
+                std::list<unsigned>::iterator seq_it_copy = seq_it;
                 --seq_it;
                 --seq_it;
+                orig_seq.erase(seq_it_copy);
             } else {
                 ++seq_it;
                 ++path_it;
