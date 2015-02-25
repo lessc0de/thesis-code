@@ -39,7 +39,7 @@
 #endif
 
 int main(int argc, char **argv) {
-    if (argc != 4) {
+    if (argc != 5) {
         std::cerr << "Usage: sequence T model N" << std::endl;
         exit(1);
     }
