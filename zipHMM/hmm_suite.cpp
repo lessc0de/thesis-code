@@ -190,40 +190,19 @@ namespace zipHMM {
             alphabet_size = nStates2alphabet_size.rbegin()->second;
         }
 
-        zipHMM::Timer stage_1_timer;
-        zipHMM::Timer stage_2_timer;
-        double stage_1_time = 0;
-        double stage_2_time = 0;
-        stage_1_timer.start();
         Matrix *symbol2matrix = new Matrix[alphabet_size];
         Matrix *symbol2argmax_matrix = new Matrix[alphabet_size];
 
         viterbi_compute_symbol2matrix(symbol2matrix, symbol2argmax_matrix, A, B, alphabet_size);
 
-        stage_1_timer.stop();
-        stage_1_time += stage_1_timer.timeElapsed();
-
-        stage_2_timer.start();
         double ll = 0.0;
         for(std::vector<std::vector<unsigned> >::const_iterator it = sequences.begin(); it != sequences.end(); ++it) {
             const std::vector<unsigned> &sequence = (*it);
             ll += viterbi_seq(pi, A, B, sequence, symbol2matrix, symbol2argmax_matrix, compute_path, viterbi_path);
         }
-        stage_2_timer.stop();
-        stage_2_time += stage_2_timer.timeElapsed();
-
-        stage_1_timer.start();
 
         delete[] symbol2matrix;
         delete[] symbol2argmax_matrix;
-
-        stage_1_timer.stop();
-        stage_1_time += stage_1_timer.timeElapsed();
-
-        std::cout << stage_1_time << " ";
-        std::cout.flush();
-        std::cout << stage_2_time << " ";
-        std::cout.flush();
 
         return ll;
     }
