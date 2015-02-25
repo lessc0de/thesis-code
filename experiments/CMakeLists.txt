@@ -9,11 +9,8 @@ target_link_libraries(hmm_experiments_new zipHMM fasta_reader)
 add_executable(complexity complexity.cpp)
 target_link_libraries(complexity zipHMM)
 
-add_executable(model model.cpp)
-target_link_libraries(model zipHMM)
-
-add_executable(sequence sequence.cpp)
-target_link_libraries(sequence zipHMM)
+add_executable(bench_viterbi bench_viterbi.cpp)
+target_link_libraries(bench_viterbi zipHMM)
 
 add_executable(backward backward.cpp)
 target_link_libraries(backward zipHMM)

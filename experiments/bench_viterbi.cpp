@@ -39,18 +39,15 @@
 #endif
 
 int main(int argc, char **argv) {
-    if (argc != 5) {
-        std::cerr << "Usage: model sequence n alphabet_size." << std::endl;
+    if (argc != 4) {
+        std::cerr << "Usage: sequence T model N" << std::endl;
         exit(1);
     }
 
-    std::string hmm_filename = argv[1];
-
-    std::string sequence_filename = argv[2];
-
-    int n = atof(argv[3]);
-
-    size_t alphabet_size = atoi(argv[4]);
+    std::string sequence_filename = argv[1];
+    int T = atoi(argv[2]);
+    std::string hmm_filename = argv[3];
+    int N = atof(argv[3]);
 
     // Read HMM.
     zipHMM::Matrix init_probs;
@@ -61,100 +58,97 @@ int main(int argc, char **argv) {
     // Run experiment.
     std::vector<unsigned> viterbi_path;
     zipHMM::Timer simple_pre_timer;
-    zipHMM::Timer zipHMMlib_uncompressed_pre_timer;
-    zipHMM::Timer zipHMMlib_uncompressed_path_pre_timer;
-    zipHMM::Timer zipHMMlib_pre_timer;
-    zipHMM::Timer zipHMMlib_path_pre_timer;
     zipHMM::Timer simple_running_timer;
-    zipHMM::Timer zipHMMlib_uncompressed_path_running_timer;
+    zipHMM::Timer zipHMMlib_uncompressed_pre_timer;
     zipHMM::Timer zipHMMlib_uncompressed_running_timer;
+    zipHMM::Timer zipHMMlib_pre_timer;
     zipHMM::Timer zipHMMlib_running_timer;
+    zipHMM::Timer zipHMMlib_uncompressed_path_pre_timer;
+    zipHMM::Timer zipHMMlib_uncompressed_path_running_timer;
+    zipHMM::Timer zipHMMlib_path_pre_timer;
     zipHMM::Timer zipHMMlib_path_running_timer;
+    float compression_ratio;
 
     // Simple
     {
-        std::cout << n << " ";
-        std::cout.flush();
-
         simple_pre_timer.start();
         simple_pre_timer.stop();
-        std::cout << simple_pre_timer.timeElapsed() << " ";
 
         simple_running_timer.start();
         zipHMM::viterbi(sequence_filename, init_probs, trans_probs, em_probs, viterbi_path);
         simple_running_timer.stop();
-        std::cout << simple_running_timer.timeElapsed() << " ";
-        std::cout.flush();
     }
 
     // zipHMMlib uncompressed
     {
         zipHMMlib_uncompressed_pre_timer.start();
-        zipHMM::HMMSuite v1;
+        zipHMM::HMMSuite v;
+        size_t alphabet_size = 4;
         size_t min_num_of_evals = 0;
-        v1.read_seq(sequence_filename, alphabet_size, min_num_of_evals);
+        v.read_seq(sequence_filename, alphabet_size, min_num_of_evals);
         zipHMMlib_uncompressed_pre_timer.stop();
-        std::cout << zipHMMlib_uncompressed_pre_timer.timeElapsed() << " ";
-        std::cout.flush();
 
         zipHMMlib_uncompressed_running_timer.start();
-        v1.viterbi(init_probs, trans_probs, em_probs);
+        v.viterbi(init_probs, trans_probs, em_probs);
         zipHMMlib_uncompressed_running_timer.stop();
-        std::cout << zipHMMlib_uncompressed_running_timer.timeElapsed() << " ";
-        std::cout.flush();
     }
 
-    // zipHMMlib uncompressed path
+    // zipHMMlib_path uncompressed
     {
         zipHMMlib_uncompressed_path_pre_timer.start();
-        zipHMM::HMMSuite v1;
+        zipHMM::HMMSuite v2;
+        size_t alphabet_size = 4;
         size_t min_num_of_evals = 0;
-        v1.read_seq(sequence_filename, alphabet_size, min_num_of_evals);
+        v2.read_seq(sequence_filename, alphabet_size, min_num_of_evals);
         zipHMMlib_uncompressed_path_pre_timer.stop();
-        std::cout << zipHMMlib_uncompressed_path_pre_timer.timeElapsed() << " ";
-        std::cout.flush();
 
         zipHMMlib_uncompressed_path_running_timer.start();
-        v1.viterbi(init_probs, trans_probs, em_probs, viterbi_path);
+        v2.viterbi(init_probs, trans_probs, em_probs, viterbi_path);
         zipHMMlib_uncompressed_path_running_timer.stop();
-        std::cout << zipHMMlib_uncompressed_path_running_timer.timeElapsed() << " ";
-        std::cout.flush();
     }
 
     // zipHMMlib
     {
         zipHMMlib_pre_timer.start();
         zipHMM::HMMSuite v;
+        size_t alphabet_size = 4;
         size_t min_num_of_evals = 500;
         v.read_seq(sequence_filename, alphabet_size, min_num_of_evals);
         zipHMMlib_pre_timer.stop();
-        std::cout << zipHMMlib_pre_timer.timeElapsed() << " ";
-        std::cout.flush();
 
         zipHMMlib_running_timer.start();
         v.viterbi(init_probs, trans_probs, em_probs);
         zipHMMlib_running_timer.stop();
-        std::cout << zipHMMlib_running_timer.timeElapsed() << " ";
-        std::cout.flush();
     }
 
     // zipHMMlib_path
     {
         zipHMMlib_path_pre_timer.start();
         zipHMM::HMMSuite v2;
+        size_t alphabet_size = 4;
         size_t min_num_of_evals = 500;
         v2.read_seq(sequence_filename, alphabet_size, min_num_of_evals);
         zipHMMlib_path_pre_timer.stop();
-        std::cout << zipHMMlib_path_pre_timer.timeElapsed() << " ";
-        std::cout.flush();
+
+        compression_ratio = v2.get_orig_seq_length() / (float) v2.get_seq_length(init_probs.get_height());
 
         zipHMMlib_path_running_timer.start();
         v2.viterbi(init_probs, trans_probs, em_probs, viterbi_path);
         zipHMMlib_path_running_timer.stop();
-        std::cout << zipHMMlib_path_running_timer.timeElapsed() << " ";
-
-        std::cout << v2.get_orig_seq_length() / (float) v2.get_seq_length(init_probs.get_height()) << std::endl;
     }
-    std::cout.flush();
+
+    std::cout << N << " "
+              << T << " "
+              << compression_ratio << " "
+              << simple_pre_timer.timeElapsed() << " "
+              << simple_running_timer.timeElapsed() << " "
+              << zipHMMlib_uncompressed_pre_timer.timeElapsed() << " "
+              << zipHMMlib_uncompressed_running_timer.timeElapsed() << " "
+              << zipHMMlib_uncompressed_path_pre_timer.timeElapsed() << " "
+              << zipHMMlib_uncompressed_path_running_timer.timeElapsed() << " "
+              << zipHMMlib_pre_timer.timeElapsed() << " "
+              << zipHMMlib_running_timer.timeElapsed() << " "
+              << zipHMMlib_path_pre_timer.timeElapsed() << " "
+              << zipHMMlib_path_running_timer.timeElapsed() << std::endl;
     exit(0);
 }
