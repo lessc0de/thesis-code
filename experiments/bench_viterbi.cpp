@@ -30,8 +30,7 @@
 #include <vector>
 #include <iostream>
 #include <cstdlib>
-#include <sstream>
-#include <cmath>
+#include <fstream>
 
 #ifdef WITH_OMP
 #include<omp.h>
@@ -39,15 +38,20 @@
 #endif
 
 int main(int argc, char **argv) {
-    if (argc != 5) {
-        std::cerr << "Usage: sequence T model N" << std::endl;
+    if (argc != 6) {
+        std::cerr << "Usage: sequence T model N filename" << std::endl;
         exit(1);
     }
 
     std::string sequence_filename = argv[1];
     int T = atoi(argv[2]);
     std::string hmm_filename = argv[3];
-    int N = atof(argv[3]);
+    int N = atof(argv[4]);
+    std::ofstream output(argv[5], std::ios::out | std::ios::trunc);
+
+    if (!output.is_open()) {
+        std::cout << "Unable to open output file." << std::endl;
+    }
 
     // Read HMM.
     zipHMM::Matrix init_probs;
@@ -137,18 +141,18 @@ int main(int argc, char **argv) {
         zipHMMlib_path_running_timer.stop();
     }
 
-    std::cout << N << " "
-              << T << " "
-              << compression_ratio << " "
-              << simple_pre_timer.timeElapsed() << " "
-              << simple_running_timer.timeElapsed() << " "
-              << zipHMMlib_uncompressed_pre_timer.timeElapsed() << " "
-              << zipHMMlib_uncompressed_running_timer.timeElapsed() << " "
-              << zipHMMlib_uncompressed_path_pre_timer.timeElapsed() << " "
-              << zipHMMlib_uncompressed_path_running_timer.timeElapsed() << " "
-              << zipHMMlib_pre_timer.timeElapsed() << " "
-              << zipHMMlib_running_timer.timeElapsed() << " "
-              << zipHMMlib_path_pre_timer.timeElapsed() << " "
-              << zipHMMlib_path_running_timer.timeElapsed() << std::endl;
+    output << N << " "
+           << T << " "
+           << compression_ratio << " "
+           << simple_pre_timer.timeElapsed() << " "
+           << simple_running_timer.timeElapsed() << " "
+           << zipHMMlib_uncompressed_pre_timer.timeElapsed() << " "
+           << zipHMMlib_uncompressed_running_timer.timeElapsed() << " "
+           << zipHMMlib_uncompressed_path_pre_timer.timeElapsed() << " "
+           << zipHMMlib_uncompressed_path_running_timer.timeElapsed() << " "
+           << zipHMMlib_pre_timer.timeElapsed() << " "
+           << zipHMMlib_running_timer.timeElapsed() << " "
+           << zipHMMlib_path_pre_timer.timeElapsed() << " "
+           << zipHMMlib_path_running_timer.timeElapsed() << std::endl;
     exit(0);
 }
