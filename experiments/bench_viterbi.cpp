@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
     int T = atoi(argv[2]);
     std::string hmm_filename = argv[3];
     int N = atof(argv[4]);
-    std::ofstream output(argv[5], std::ios::out | std::ios::trunc);
+    std::ofstream output(argv[5], std::ios::out | std::ios::app);
 
     if (!output.is_open()) {
         std::cout << "Unable to open output file." << std::endl;
@@ -154,5 +154,6 @@ int main(int argc, char **argv) {
            << zipHMMlib_running_timer.timeElapsed() << " "
            << zipHMMlib_path_pre_timer.timeElapsed() << " "
            << zipHMMlib_path_running_timer.timeElapsed() << std::endl;
+    output.close();
     exit(0);
 }
