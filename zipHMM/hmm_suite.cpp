@@ -318,7 +318,8 @@ namespace zipHMM {
 
             // Scale the values in res using the scales vector.
             for (size_t j = 0; j < res.get_width(); ++j) {
-                res(0, j) /= std::exp(scales[c+1]);
+                // res(0, j) /= std::exp(scales[c+1]);
+                res(0, j) = std::exp(std::log(res(0, j)) - scales[c+1]);
             }
 
         }
