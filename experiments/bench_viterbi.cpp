@@ -63,6 +63,8 @@ int main(int argc, char **argv) {
     std::vector<unsigned> viterbi_path;
     zipHMM::Timer simple_pre_timer;
     zipHMM::Timer simple_running_timer;
+    zipHMM::Timer simple_path_pre_timer;
+    zipHMM::Timer simple_path_running_timer;
     zipHMM::Timer zipHMMlib_uncompressed_pre_timer;
     zipHMM::Timer zipHMMlib_uncompressed_running_timer;
     zipHMM::Timer zipHMMlib_pre_timer;
@@ -71,7 +73,7 @@ int main(int argc, char **argv) {
     zipHMM::Timer zipHMMlib_uncompressed_path_running_timer;
     zipHMM::Timer zipHMMlib_path_pre_timer;
     zipHMM::Timer zipHMMlib_path_running_timer;
-    float compression_ratio;
+    size_t T_prime;
 
     // Simple
     {
@@ -79,8 +81,18 @@ int main(int argc, char **argv) {
         simple_pre_timer.stop();
 
         simple_running_timer.start();
-        zipHMM::viterbi(sequence_filename, init_probs, trans_probs, em_probs, viterbi_path);
+        zipHMM::viterbi(sequence_filename, init_probs, trans_probs, em_probs);
         simple_running_timer.stop();
+    }
+
+    // Simple Path
+    {
+        simple_path_pre_timer.start();
+        simple_path_pre_timer.stop();
+
+        simple_path_running_timer.start();
+        zipHMM::viterbi(sequence_filename, init_probs, trans_probs, em_probs, viterbi_path);
+        simple_path_running_timer.stop();
     }
 
     // zipHMMlib uncompressed
@@ -134,7 +146,7 @@ int main(int argc, char **argv) {
         v2.read_seq(sequence_filename, alphabet_size, min_num_of_evals);
         zipHMMlib_path_pre_timer.stop();
 
-        compression_ratio = v2.get_orig_seq_length() / (float) v2.get_seq_length(init_probs.get_height());
+        T_prime = v2.get_seq_length(init_probs.get_height());
 
         zipHMMlib_path_running_timer.start();
         v2.viterbi(init_probs, trans_probs, em_probs, viterbi_path);
@@ -143,9 +155,11 @@ int main(int argc, char **argv) {
 
     output << N << " "
            << T << " "
-           << compression_ratio << " "
+           << T_prime << " "
            << simple_pre_timer.timeElapsed() << " "
            << simple_running_timer.timeElapsed() << " "
+           << simple_path_pre_timer.timeElapsed() << " "
+           << simple_path_running_timer.timeElapsed() << " "
            << zipHMMlib_uncompressed_pre_timer.timeElapsed() << " "
            << zipHMMlib_uncompressed_running_timer.timeElapsed() << " "
            << zipHMMlib_uncompressed_path_pre_timer.timeElapsed() << " "
