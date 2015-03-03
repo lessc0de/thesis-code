@@ -27,6 +27,7 @@
 #include "../zipHMM/posterior_decoding.hpp"
 #include "../zipHMM/matrix.hpp"
 #include "../zipHMM/hmm_suite.hpp"
+#include "../zipHMM/forwarder.hpp"
 
 #include <string>
 #include <iomanip>
@@ -74,11 +75,22 @@ int main(int argc, char **argv) {
 
     std::cout << std::endl << std::endl;
 
+    // zipHMM original implementation
+    {
+        zipHMM::Forwarder f;
+        int alphabet_size = 4;
+        int min_num_of_evals = 500;
+        f.read_seq(seq_filename, alphabet_size, min_num_of_evals);
+        double res = f.forward(pi, A, B);
+
+        std::cout << res << std::endl;
+    }
+
     // zipHMM implementation
     {
         zipHMM::HMMSuite h;
         int alphabet_size = 4;
-        int min_num_of_evals = 0;
+        int min_num_of_evals = 500;
         h.read_seq(seq_filename, alphabet_size, min_num_of_evals);
         double res = h.forward(pi, A, B);
 

@@ -76,6 +76,16 @@ int main(int argc, char **argv) {
     if (ref_pd_path != zip_pd_path) {
         std::cout << "Paths not identical!" << std::endl;
         exit(1);
+    } else {
+        std::cout << "Paths identical!" << std::endl;
+        for (size_t i = 0; i < 10; ++i) {
+            std::cout << ref_pd_path[i] << " ";
+        }
+        std::cout << "..." << std::endl;
+        for (size_t i = 0; i < 10; ++i) {
+            std::cout << zip_pd_path[i] << " ";
+        }
+        std::cout << "..." << std::endl;
     }
 
     exit(0);

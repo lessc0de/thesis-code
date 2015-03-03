@@ -96,6 +96,12 @@ int main(int argc, char **argv) {
         b.read_seq(seq_filename, alphabet_size, min_num_of_evals);
         zipHMM::Matrix backward_table;
         b.backward(pi, A, B, scales, backward_table);
+
+        std::cout << "First column:" << std::endl;
+        for (size_t i = 0; i < backward_table.get_height(); ++i) {
+            std::cout << backward_table(i, 0) << " ";
+        }
+        std::cout << std::endl;
     }
 
     exit(0);
