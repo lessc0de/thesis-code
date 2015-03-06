@@ -97,7 +97,6 @@ int main(int argc, char **argv) {
     ref_timer.stop();
     std::cout << "Reference:\t" << res << "\t" << ref_timer.timeElapsed() << std::endl;
 
-
     std::vector<unsigned> my_viterbi_path;
     zipHMM::HMMSuite h;
     size_t alphabet_size = 4;
@@ -109,22 +108,48 @@ int main(int argc, char **argv) {
     comp_timer.stop();
     std::cout << "My new impl.:\t" << my_new_res << "\t" << comp_timer.timeElapsed() << std::endl;
 
-    if (std::abs(res - my_new_res) > 1e-3) {
+    std::vector<unsigned> my_viterbi_path2;
+    zipHMM::Timer comp_timer2;
+    comp_timer2.start();
+    h.read_seq(sequence_filename, alphabet_size, min_num_of_evals);
+    double my_new_res2 = h.viterbi(init_probs, trans_probs, em_probs, true, my_viterbi_path2);
+    comp_timer2.stop();
+    std::cout << "My new impl.:\t" << my_new_res2 << "\t" << comp_timer2.timeElapsed() << std::endl;
+
+    if (std::abs(res - my_new_res) > 1e-3 || std::abs(res - my_new_res2) > 1e-3) {
         std::cout << "Likelihoods not identical!" << std::endl;
         exit(1);
     }
 
-    if (ref_viterbi_path.size() != my_viterbi_path.size()) {
+    if (ref_viterbi_path.size() != my_viterbi_path.size() || ref_viterbi_path.size() != my_viterbi_path2.size()) {
         std::cout << "Viterbi paths do not have the same length!" << std::endl
                   << "Reference: " << ref_viterbi_path.size() << std::endl
-                  << "zipHMMlib: " << my_viterbi_path.size() << std::endl;
+                  << "zipHMMlib: " << my_viterbi_path.size() << std::endl
+                  << "zipHMMlib2: " << my_viterbi_path2.size() << std::endl;
         exit(3);
     }
 
     std::vector<unsigned> seq;
     zipHMM::readSeq(seq, sequence_filename);
-    if (!valid_path(seq, my_viterbi_path, my_new_res, init_probs, trans_probs, em_probs)) {
+    if (!valid_path(seq, my_viterbi_path, my_new_res, init_probs, trans_probs, em_probs) ||
+        !valid_path(seq, my_viterbi_path2, my_new_res2, init_probs, trans_probs, em_probs)) {
         std::cout << "Viterbi paths not identical!" << std::endl;
+
+        std::cout << "Ref:" << std::endl;
+        for (size_t i = 0; i < ref_viterbi_path.size(); ++i) {
+            std::cout << ref_viterbi_path[i] << " ";
+        }
+        std::cout << std::endl;
+        std::cout << "My impl.:" << std::endl;
+        for (size_t i = 0; i < my_viterbi_path.size(); ++i) {
+            std::cout << my_viterbi_path[i] << " ";
+        }
+        std::cout << std::endl;
+        std::cout << "My impl 2:" << std::endl;
+        for (size_t i = 0; i < my_viterbi_path2.size(); ++i) {
+            std::cout << my_viterbi_path2[i] << " ";
+        }
+        std::cout << std::endl;
         exit(2);
     }
 

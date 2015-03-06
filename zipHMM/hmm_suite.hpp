@@ -60,12 +60,16 @@ namespace zipHMM {
                            const Matrix *symbol2matrix,
                            const Matrix *symbol2matrixR,
                            const bool compute_path,
+                           const bool memory_save,
                            std::vector<unsigned> &viterbi_path) const;
 
         double viterbi(const Matrix &pi, const Matrix &A, const Matrix &B) const;
 
         double viterbi(const Matrix &pi, const Matrix &A, const Matrix &B,
                        std::vector<unsigned> &viterbi_path) const;
+
+        double viterbi(const Matrix &pi, const Matrix &A, const Matrix &B,
+                       const bool memory_save, std::vector<unsigned> &viterbi_path) const;
 
         void posterior_decoding(const Matrix &pi, const Matrix &A, const Matrix &B,
                                 std::vector<unsigned> &posterior_path) const;
@@ -137,7 +141,7 @@ namespace zipHMM {
                          const Matrix *symbol2matrixR) const;
 
         double viterbi_helper(const Matrix &pi, const Matrix &A, const Matrix &B,
-                              const bool compute_path, std::vector<unsigned> &viterbi_path) const;
+                              const bool compute_path, const bool memory_save, std::vector<unsigned> &viterbi_path) const;
     };
 
 }

@@ -64,24 +64,46 @@ namespace zipHMM {
 
 
     double HMMSuite::viterbi_seq(const Matrix &pi, const Matrix &A, const Matrix &B,
-                                const std::vector<unsigned> &sequence,
-                                const Matrix *symbol2matrix,
-                                const Matrix *symbol2argmax_matrix,
-                                const bool compute_path,
-                                std::vector<unsigned> &viterbi_path) const {
+                                 const std::vector<unsigned> &sequence,
+                                 const Matrix *symbol2matrix,
+                                 const Matrix *symbol2argmax_matrix,
+                                 const bool compute_path,
+                                 const bool memory_save,
+                                 std::vector<unsigned> &viterbi_path) const {
         size_t no_states = A.get_height();
         Matrix res(no_states, 1);
 
         // Save paths in this table.
-        Matrix viterbi_table(sequence.size(), no_states);
+        Matrix viterbi_table;
+        size_t no_blocks = std::ceil(std::sqrt(sequence.size()));
+        size_t block_width = std::sqrt(sequence.size());
+        if (compute_path && memory_save) {
+            viterbi_table.reset(no_blocks, no_states);
+        } else if (compute_path) {
+            viterbi_table.reset(sequence.size(), no_states);
+        }
 
         // Init.
         init_apply_em_log_prob(res, pi, B, sequence[0]);
 
+        if (compute_path && memory_save) {
+            for (size_t i = 0; i < no_states; ++i) {
+                viterbi_table(0, i) = res(i, 0);
+            }
+        }
+
         // Recursion.
         Matrix tmp;
         for(size_t c = 1; c < sequence.size(); ++c) {
-            if (compute_path) {
+            if (compute_path && memory_save) {
+                Matrix::maxMult<LogSpace>(symbol2matrix[sequence[c]], res, tmp);
+                if (c % block_width == 0) {
+                    // Checkpoint.
+                    for (size_t i = 0; i < no_states; ++i) {
+                        viterbi_table(c / block_width, i) = tmp(i, 0);
+                    }
+                }
+            } else if (compute_path) {
                 Matrix where;
                 Matrix::argMaxAndMaxMult<LogSpace>(symbol2matrix[sequence[c]], res, tmp, where);
                 for (size_t i = 0; i < no_states; ++i) {
@@ -104,7 +126,39 @@ namespace zipHMM {
         }
 
         // Backtrack.
-        if (compute_path) {
+        if (compute_path && memory_save) {
+            viterbi_path.resize(sequence.size());
+            viterbi_path[sequence.size() - 1] = unsigned(end_point);
+
+            Matrix block;
+            block.reset(block_width, no_states);
+            // Iterate over blocks from right to left.
+            for (int i = no_blocks - 1; i > 0; --i) {
+                // Put column into res vector.
+                for (size_t j = 0; j < no_states; ++j) {
+                    res(j, 0) = viterbi_table(i, j);
+                }
+
+                // Iterate over block.
+                for(size_t c = i * block_width; c < sequence.size() && c < (i + 1) * block_width; ++c) {
+                    Matrix where;
+                    Matrix::argMaxAndMaxMult<LogSpace>(symbol2matrix[sequence[c]], res, tmp, where);
+                    for (size_t j = 0; j < no_states; ++j) {
+                        block(c % block_width, j) = where(j, 0);
+                    }
+                    Matrix::copy(tmp, res);
+                }
+
+                // Backtrack block.
+                for(size_t c = i * no_blocks; c < sequence.size() && c < (i + 1) * no_blocks; ++c) {
+                    viterbi_path[c - 1] = block(c % block_width, viterbi_path[c]);
+                }
+            }
+
+            // Recreate the original HMMSuite path.
+            deduct_path(sequence, viterbi_path, symbol2argmax_matrix);
+        }
+        else if (compute_path) {
             viterbi_path.resize(sequence.size());
             viterbi_path[sequence.size() - 1] = unsigned(end_point);
 
@@ -161,7 +215,7 @@ namespace zipHMM {
 
     }
 
-    double HMMSuite::viterbi_helper(const Matrix &pi, const Matrix &A, const Matrix &B, const bool compute_path, std::vector<unsigned> &viterbi_path) const {
+    double HMMSuite::viterbi_helper(const Matrix &pi, const Matrix &A, const Matrix &B, const bool compute_path, const bool memory_save, std::vector<unsigned> &viterbi_path) const {
         if(pi.get_width() != 1 || pi.get_height() != A.get_width() || A.get_height() != A.get_width() ||
            B.get_height() != A.get_width() || B.get_width() != orig_alphabet_size) {
             std::cerr << "Dimensions of input matrices do not match:" << std::endl;
@@ -198,7 +252,7 @@ namespace zipHMM {
         double ll = 0.0;
         for(std::vector<std::vector<unsigned> >::const_iterator it = sequences.begin(); it != sequences.end(); ++it) {
             const std::vector<unsigned> &sequence = (*it);
-            ll += viterbi_seq(pi, A, B, sequence, symbol2matrix, symbol2argmax_matrix, compute_path, viterbi_path);
+            ll += viterbi_seq(pi, A, B, sequence, symbol2matrix, symbol2argmax_matrix, compute_path, memory_save, viterbi_path);
         }
 
         delete[] symbol2matrix;
@@ -209,12 +263,17 @@ namespace zipHMM {
 
     double HMMSuite::viterbi(const Matrix &pi, const Matrix &A, const Matrix &B) const {
         std::vector<unsigned> v;
-        return HMMSuite::viterbi_helper(pi, A, B, false, v);
+        return HMMSuite::viterbi_helper(pi, A, B, false, false, v);
     }
 
     double HMMSuite::viterbi(const Matrix &pi, const Matrix &A, const Matrix &B,
                             std::vector<unsigned> &viterbi_path) const {
-        return HMMSuite::viterbi_helper(pi, A, B, true, viterbi_path);
+        return HMMSuite::viterbi_helper(pi, A, B, true, false, viterbi_path);
+    }
+
+    double HMMSuite::viterbi(const Matrix &pi, const Matrix &A, const Matrix &B,
+                             const bool memory_save, std::vector<unsigned> &viterbi_path) const {
+        return HMMSuite::viterbi_helper(pi, A, B, true, memory_save, viterbi_path);
     }
 
     void HMMSuite::viterbi_compute_symbol2matrix(Matrix *symbol2matrix,
