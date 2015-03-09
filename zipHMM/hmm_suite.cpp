@@ -73,13 +73,16 @@ namespace zipHMM {
         size_t no_states = A.get_height();
         Matrix res(no_states, 1);
 
-        // Save paths in this table.
         Matrix viterbi_table;
         size_t no_blocks = std::ceil(std::sqrt(sequence.size()));
-        size_t block_width = std::sqrt(sequence.size());
+        size_t block_width = std::ceil(std::sqrt(sequence.size()));
+
         if (compute_path && memory_save) {
+            // Viterbi table contains the value of the last column of each
+            // block.
             viterbi_table.reset(no_blocks, no_states);
         } else if (compute_path) {
+            // Viterbi table contains a pointer for each cell.
             viterbi_table.reset(sequence.size(), no_states);
         }
 
@@ -126,46 +129,47 @@ namespace zipHMM {
         }
 
         // Backtrack.
-        if (compute_path && memory_save) {
+        if (compute_path) {
             viterbi_path.resize(sequence.size());
             viterbi_path[sequence.size() - 1] = unsigned(end_point);
+            if (memory_save) {
+                // Block contains a pointer for each cell.
+                Matrix block;
+                block.reset(block_width, no_states);
 
-            Matrix block;
-            block.reset(block_width, no_states);
-            // Iterate over blocks from right to left.
-            for (int i = no_blocks - 1; i > 0; --i) {
-                // Put column into res vector.
-                for (size_t j = 0; j < no_states; ++j) {
-                    res(j, 0) = viterbi_table(i, j);
-                }
-
-                // Iterate over block.
-                for(size_t c = i * block_width; c < sequence.size() && c < (i + 1) * block_width; ++c) {
-                    Matrix where;
-                    Matrix::argMaxAndMaxMult<LogSpace>(symbol2matrix[sequence[c]], res, tmp, where);
+                // Iterate over blocks from right to left.
+                for (int i = no_blocks - 1; i >= 0; --i) {
+                    // Put the last column of the previous block column into
+                    // res vector.
                     for (size_t j = 0; j < no_states; ++j) {
-                        block(c % block_width, j) = where(j, 0);
+                        res(j, 0) = viterbi_table(i, j);
                     }
-                    Matrix::copy(tmp, res);
+
+                    // Recompute block.
+                    for(size_t c = i * block_width + 1; c < sequence.size() && c < (i + 1) * block_width + 1; ++c) {
+                        Matrix where;
+                        Matrix::argMaxAndMaxMult<LogSpace>(symbol2matrix[sequence[c]], res, tmp, where);
+                        for (size_t j = 0; j < no_states; ++j) {
+                            block((c - 1) % block_width, j) = where(j, 0);
+                        }
+                        Matrix::copy(tmp, res);
+                    }
+
+                    // Backtrack block.
+                    for(int j = block_width - 1; j >= 0; --j) {
+                        size_t c = i * block_width + j + 1;
+                        if (c >= sequence.size()) {
+                            continue;
+                        }
+                        viterbi_path[c - 1] = block(j, viterbi_path[c]);
+                    }
                 }
 
-                // Backtrack block.
-                for(size_t c = i * no_blocks; c < sequence.size() && c < (i + 1) * no_blocks; ++c) {
-                    viterbi_path[c - 1] = block(c % block_width, viterbi_path[c]);
+            } else {
+                for (size_t c = sequence.size() - 1; c > 0; --c) {
+                    viterbi_path[c - 1] = viterbi_table(c, viterbi_path[c]);
                 }
             }
-
-            // Recreate the original HMMSuite path.
-            deduct_path(sequence, viterbi_path, symbol2argmax_matrix);
-        }
-        else if (compute_path) {
-            viterbi_path.resize(sequence.size());
-            viterbi_path[sequence.size() - 1] = unsigned(end_point);
-
-            for (size_t c = sequence.size() - 1; c > 0; --c) {
-                viterbi_path[c - 1] = viterbi_table(c, viterbi_path[c]);
-            }
-
             // Recreate the original HMMSuite path.
             deduct_path(sequence, viterbi_path, symbol2argmax_matrix);
         }
