@@ -73,6 +73,7 @@ int main(int argc, char **argv) {
     zipHMM::Timer zipHMMlib_uncompressed_path_running_timer;
     zipHMM::Timer zipHMMlib_path_pre_timer;
     zipHMM::Timer zipHMMlib_path_running_timer;
+    zipHMM::Timer zipHMMlib_path_memory_save_running_timer;
     size_t T_prime;
 
     // Simple
@@ -153,6 +154,18 @@ int main(int argc, char **argv) {
         zipHMMlib_path_running_timer.stop();
     }
 
+    // zipHMMlib_path_memory_saver
+    {
+        zipHMM::HMMSuite v2;
+        size_t alphabet_size = 4;
+        size_t min_num_of_evals = 500;
+        v2.read_seq(sequence_filename, alphabet_size, min_num_of_evals);
+
+        zipHMMlib_path_memory_save_running_timer.start();
+        v2.viterbi(init_probs, trans_probs, em_probs, true, viterbi_path);
+        zipHMMlib_path_memory_save_running_timer.stop();
+    }
+
     output << N << " "
            << T << " "
            << T_prime << " "
@@ -167,7 +180,8 @@ int main(int argc, char **argv) {
            << zipHMMlib_pre_timer.timeElapsed() << " "
            << zipHMMlib_running_timer.timeElapsed() << " "
            << zipHMMlib_path_pre_timer.timeElapsed() << " "
-           << zipHMMlib_path_running_timer.timeElapsed() << std::endl;
+           << zipHMMlib_path_running_timer.timeElapsed() << " "
+           << zipHMMlib_path_memory_save_running_timer.timeElapsed() << std::endl;
     output.close();
     exit(0);
 }
