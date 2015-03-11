@@ -71,6 +71,7 @@ int main(int argc, char **argv) {
     zipHMM::Timer zipHMMlib_running_timer;
     zipHMM::Timer zipHMMlib_uncompressed_path_pre_timer;
     zipHMM::Timer zipHMMlib_uncompressed_path_running_timer;
+    zipHMM::Timer zipHMMlib_uncompressed_path_memory_save_running_timer;
     zipHMM::Timer zipHMMlib_path_pre_timer;
     zipHMM::Timer zipHMMlib_path_running_timer;
     zipHMM::Timer zipHMMlib_path_memory_save_running_timer;
@@ -124,6 +125,18 @@ int main(int argc, char **argv) {
         zipHMMlib_uncompressed_path_running_timer.stop();
     }
 
+    // zipHMMlib_path uncompressed memory save
+    {
+        zipHMM::HMMSuite v2;
+        size_t alphabet_size = 4;
+        size_t min_num_of_evals = 0;
+        v2.read_seq(sequence_filename, alphabet_size, min_num_of_evals);
+
+        zipHMMlib_uncompressed_path_memory_save_running_timer.start();
+        v2.viterbi(init_probs, trans_probs, em_probs, viterbi_path);
+        zipHMMlib_uncompressed_path_memory_save_running_timer.stop();
+    }
+
     // zipHMMlib
     {
         zipHMMlib_pre_timer.start();
@@ -173,10 +186,13 @@ int main(int argc, char **argv) {
            << simple_running_timer.timeElapsed() << " "
            << simple_path_pre_timer.timeElapsed() << " "
            << simple_path_running_timer.timeElapsed() << " "
+
            << zipHMMlib_uncompressed_pre_timer.timeElapsed() << " "
            << zipHMMlib_uncompressed_running_timer.timeElapsed() << " "
            << zipHMMlib_uncompressed_path_pre_timer.timeElapsed() << " "
            << zipHMMlib_uncompressed_path_running_timer.timeElapsed() << " "
+           << zipHMMlib_uncompressed_path_memory_save_running_timer.timeElapsed() << " "
+
            << zipHMMlib_pre_timer.timeElapsed() << " "
            << zipHMMlib_running_timer.timeElapsed() << " "
            << zipHMMlib_path_pre_timer.timeElapsed() << " "
