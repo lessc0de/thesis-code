@@ -78,13 +78,6 @@ namespace zipHMM {
     }
   }
 
-  // Standard matrices for use with backward algorithm.
-  void make_em_trans_probs_array(Matrix *symbol2matrix, const Matrix &A, const Matrix &B) {
-    for(size_t i = 0; i < B.get_width(); ++i) {
-      _apply_em_prob(symbol2matrix[unsigned(i)], A, B, unsigned(i));
-    }
-  }
-
   // Logarithmic matrices for use with Viterbi algorithm.
   void init_apply_em_log_prob(Matrix &res, const Matrix &pi, const Matrix &B, const unsigned symbol) {
     _init_apply_em_prob(res, pi, B, symbol);

@@ -341,7 +341,7 @@ namespace zipHMM {
         double *symbol2scale = new double[alphabet_size];
         Matrix *symbol2matrix = new Matrix[alphabet_size];
 
-        backward_compute_symbol2scale_and_symbol2matrix(symbol2matrix, symbol2scale, A, B, alphabet_size);
+        forward_compute_symbol2scale_and_symbol2matrix(symbol2matrix, symbol2scale, A, B, alphabet_size);
 
         for(std::vector<std::vector<unsigned> >::const_iterator it = sequences.begin(); it != sequences.end(); ++it) {
             const std::vector<unsigned> &sequence = (*it);
@@ -381,27 +381,8 @@ namespace zipHMM {
 
             // Scale the values in res using the scales vector.
             for (size_t j = 0; j < res.get_width(); ++j) {
-                // res(0, j) /= std::exp(scales[c+1]);
-                res(0, j) = std::exp(std::log(res(0, j)) - scales[c+1]);
+                res(0, j) /= scales[c+1];
             }
-
-        }
-    }
-
-    void HMMSuite::backward_compute_symbol2scale_and_symbol2matrix(Matrix *symbol2matrix, double *symbol2scale, const Matrix &A, const Matrix &B, const size_t alphabet_size) const{
-        // compute C matrices for each symbol in the original alphabet
-        make_em_trans_probs_array(symbol2matrix, A, B);
-
-        // compute C matrices for each symbol in the extended alphabet
-        for(size_t i = orig_alphabet_size; i < alphabet_size; ++i) {
-            const s_pair symbol_pair = symbol2pair.find(unsigned(i))->second;
-            const unsigned left_symbol = symbol_pair.second; // the multiplication is done in the reverse direction of the sequence
-            const unsigned right_symbol  = symbol_pair.first;
-            Matrix &left_matrix  = symbol2matrix[left_symbol];
-            Matrix &right_matrix = symbol2matrix[right_symbol];
-
-            Matrix::blas_mult(left_matrix, right_matrix, symbol2matrix[i]);
-            // symbol2scale[i] = std::log( symbol2matrix[i].normalize() ) + symbol2scale[left_symbol] + symbol2scale[right_symbol];
         }
     }
 
@@ -472,12 +453,15 @@ namespace zipHMM {
         double loglikelihood = 0;
         unsigned no_states = A.get_width();
 
+        std::vector<double> internal_scales;
+
         if (compute_table) {
             forward_table.reset(no_states, sequence.size());
         }
 
         // compute C_1 and push corresponding scale
-        scales.push_back( std::log(init_apply_em_prob(res, pi, B, sequence[0])) );
+        internal_scales.push_back( std::log(init_apply_em_prob(res, pi, B, sequence[0])) );
+        scales.push_back(internal_scales[0]);
         if (compute_table) {
             for (size_t j = 0; j < no_states; ++j) {
                 forward_table(j, 0) = res(j, 0);
@@ -495,11 +479,13 @@ namespace zipHMM {
                 }
             }
 
-            scales.push_back( std::log(res.normalize()) + symbol2scale[sequence[i]] );
+            double res_normalized = res.normalize();
+            internal_scales.push_back(std::log(res_normalized)  + symbol2scale[sequence[i]] );
+            scales.push_back(res_normalized);
         }
 
         // compute loglikelihood by summing log of scales
-        for(std::vector<double>::iterator it = scales.begin(); it != scales.end(); ++it) {
+        for(std::vector<double>::iterator it = internal_scales.begin(); it != internal_scales.end(); ++it) {
             loglikelihood += (*it);
         }
 
