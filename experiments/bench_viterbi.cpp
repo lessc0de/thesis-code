@@ -65,16 +65,25 @@ int main(int argc, char **argv) {
     zipHMM::Timer simple_running_timer;
     zipHMM::Timer simple_path_pre_timer;
     zipHMM::Timer simple_path_running_timer;
-    zipHMM::Timer zipHMMlib_uncompressed_pre_timer;
-    zipHMM::Timer zipHMMlib_uncompressed_running_timer;
-    zipHMM::Timer zipHMMlib_pre_timer;
-    zipHMM::Timer zipHMMlib_running_timer;
-    zipHMM::Timer zipHMMlib_uncompressed_path_pre_timer;
-    zipHMM::Timer zipHMMlib_uncompressed_path_running_timer;
-    zipHMM::Timer zipHMMlib_uncompressed_path_memory_save_running_timer;
-    zipHMM::Timer zipHMMlib_path_pre_timer;
-    zipHMM::Timer zipHMMlib_path_running_timer;
-    zipHMM::Timer zipHMMlib_path_memory_save_running_timer;
+
+    zipHMM::Timer uncompressed_pre_timer;
+    zipHMM::Timer uncompressed_running_timer;
+    zipHMM::Timer uncompressed_path_pre_timer;
+    zipHMM::Timer uncompressed_path_running_timer;
+    zipHMM::Timer uncompressed_path_memory_running_timer;
+
+    zipHMM::Timer one_pre_timer;
+    zipHMM::Timer one_running_timer;
+    zipHMM::Timer one_path_pre_timer;
+    zipHMM::Timer one_path_running_timer;
+    zipHMM::Timer one_path_memory_running_timer;
+
+    zipHMM::Timer many_pre_timer;
+    zipHMM::Timer many_running_timer;
+    zipHMM::Timer many_path_pre_timer;
+    zipHMM::Timer many_path_running_timer;
+    zipHMM::Timer many_path_memory_running_timer;
+
     size_t T_prime;
 
     // Simple
@@ -99,105 +108,154 @@ int main(int argc, char **argv) {
 
     // zipHMMlib uncompressed
     {
-        zipHMMlib_uncompressed_pre_timer.start();
+        uncompressed_pre_timer.start();
         zipHMM::HMMSuite v;
         size_t alphabet_size = 4;
         size_t min_num_of_evals = 0;
         v.read_seq(sequence_filename, alphabet_size, min_num_of_evals);
-        zipHMMlib_uncompressed_pre_timer.stop();
+        uncompressed_pre_timer.stop();
 
-        zipHMMlib_uncompressed_running_timer.start();
+        uncompressed_running_timer.start();
         v.viterbi(init_probs, trans_probs, em_probs);
-        zipHMMlib_uncompressed_running_timer.stop();
+        uncompressed_running_timer.stop();
     }
 
-    // zipHMMlib_path uncompressed
+    // path uncompressed
     {
-        zipHMMlib_uncompressed_path_pre_timer.start();
+        uncompressed_path_pre_timer.start();
         zipHMM::HMMSuite v2;
         size_t alphabet_size = 4;
         size_t min_num_of_evals = 0;
         v2.read_seq(sequence_filename, alphabet_size, min_num_of_evals);
-        zipHMMlib_uncompressed_path_pre_timer.stop();
+        uncompressed_path_pre_timer.stop();
 
-        zipHMMlib_uncompressed_path_running_timer.start();
+        uncompressed_path_running_timer.start();
         v2.viterbi(init_probs, trans_probs, em_probs, viterbi_path);
-        zipHMMlib_uncompressed_path_running_timer.stop();
+        uncompressed_path_running_timer.stop();
     }
 
-    // zipHMMlib_path uncompressed memory save
+    // path uncompressed memory save
     {
         zipHMM::HMMSuite v2;
         size_t alphabet_size = 4;
         size_t min_num_of_evals = 0;
         v2.read_seq(sequence_filename, alphabet_size, min_num_of_evals);
 
-        zipHMMlib_uncompressed_path_memory_save_running_timer.start();
+        uncompressed_path_memory_running_timer.start();
         v2.viterbi(init_probs, trans_probs, em_probs, viterbi_path);
-        zipHMMlib_uncompressed_path_memory_save_running_timer.stop();
+        uncompressed_path_memory_running_timer.stop();
     }
 
-    // zipHMMlib
+    // zipHMMlib one
     {
-        zipHMMlib_pre_timer.start();
+        one_pre_timer.start();
         zipHMM::HMMSuite v;
         size_t alphabet_size = 4;
-        size_t min_num_of_evals = 500;
+        size_t min_num_of_evals = 1;
         v.read_seq(sequence_filename, alphabet_size, min_num_of_evals);
-        zipHMMlib_pre_timer.stop();
+        one_pre_timer.stop();
 
-        zipHMMlib_running_timer.start();
+        one_running_timer.start();
         v.viterbi(init_probs, trans_probs, em_probs);
-        zipHMMlib_running_timer.stop();
+        one_running_timer.stop();
     }
 
-    // zipHMMlib_path
+    // zipHMMlib one path
     {
-        zipHMMlib_path_pre_timer.start();
+        one_path_pre_timer.start();
         zipHMM::HMMSuite v2;
         size_t alphabet_size = 4;
-        size_t min_num_of_evals = 500;
+        size_t min_num_of_evals = 1;
         v2.read_seq(sequence_filename, alphabet_size, min_num_of_evals);
-        zipHMMlib_path_pre_timer.stop();
+        one_path_pre_timer.stop();
 
         T_prime = v2.get_seq_length(init_probs.get_height());
 
-        zipHMMlib_path_running_timer.start();
+        one_path_running_timer.start();
         v2.viterbi(init_probs, trans_probs, em_probs, viterbi_path);
-        zipHMMlib_path_running_timer.stop();
+        one_path_running_timer.stop();
     }
 
-    // zipHMMlib_path_memory_saver
+    // one path memory
+    {
+        zipHMM::HMMSuite v2;
+        size_t alphabet_size = 4;
+        size_t min_num_of_evals = 1;
+        v2.read_seq(sequence_filename, alphabet_size, min_num_of_evals);
+
+        one_path_memory_running_timer.start();
+        v2.viterbi(init_probs, trans_probs, em_probs, true, viterbi_path);
+        one_path_memory_running_timer.stop();
+    }
+
+    // many
+    {
+        many_pre_timer.start();
+        zipHMM::HMMSuite v;
+        size_t alphabet_size = 4;
+        size_t min_num_of_evals = 500;
+        v.read_seq(sequence_filename, alphabet_size, min_num_of_evals);
+        many_pre_timer.stop();
+
+        many_running_timer.start();
+        v.viterbi(init_probs, trans_probs, em_probs);
+        many_running_timer.stop();
+    }
+
+    // path many
+    {
+        many_path_pre_timer.start();
+        zipHMM::HMMSuite v2;
+        size_t alphabet_size = 4;
+        size_t min_num_of_evals = 500;
+        v2.read_seq(sequence_filename, alphabet_size, min_num_of_evals);
+        many_path_pre_timer.stop();
+
+        T_prime = v2.get_seq_length(init_probs.get_height());
+
+        many_path_running_timer.start();
+        v2.viterbi(init_probs, trans_probs, em_probs, viterbi_path);
+        many_path_running_timer.stop();
+    }
+
+    // many path memory
     {
         zipHMM::HMMSuite v2;
         size_t alphabet_size = 4;
         size_t min_num_of_evals = 500;
         v2.read_seq(sequence_filename, alphabet_size, min_num_of_evals);
 
-        zipHMMlib_path_memory_save_running_timer.start();
+        many_path_memory_running_timer.start();
         v2.viterbi(init_probs, trans_probs, em_probs, true, viterbi_path);
-        zipHMMlib_path_memory_save_running_timer.stop();
+        many_path_memory_running_timer.stop();
     }
 
     output << N << " "
            << T << " "
            << T_prime << " "
+
            << simple_pre_timer.timeElapsed() << " "
            << simple_running_timer.timeElapsed() << " "
            << simple_path_pre_timer.timeElapsed() << " "
            << simple_path_running_timer.timeElapsed() << " "
 
-           << zipHMMlib_uncompressed_pre_timer.timeElapsed() << " "
-           << zipHMMlib_uncompressed_running_timer.timeElapsed() << " "
-           << zipHMMlib_uncompressed_path_pre_timer.timeElapsed() << " "
-           << zipHMMlib_uncompressed_path_running_timer.timeElapsed() << " "
-           << zipHMMlib_uncompressed_path_memory_save_running_timer.timeElapsed() << " "
+           << uncompressed_pre_timer.timeElapsed() << " "
+           << uncompressed_running_timer.timeElapsed() << " "
+           << uncompressed_path_pre_timer.timeElapsed() << " "
+           << uncompressed_path_running_timer.timeElapsed() << " "
+           << uncompressed_path_memory_running_timer.timeElapsed() << " "
 
-           << zipHMMlib_pre_timer.timeElapsed() << " "
-           << zipHMMlib_running_timer.timeElapsed() << " "
-           << zipHMMlib_path_pre_timer.timeElapsed() << " "
-           << zipHMMlib_path_running_timer.timeElapsed() << " "
-           << zipHMMlib_path_memory_save_running_timer.timeElapsed() << std::endl;
+           << one_pre_timer.timeElapsed() << " "
+           << one_running_timer.timeElapsed() << " "
+           << one_path_pre_timer.timeElapsed() << " "
+           << one_path_running_timer.timeElapsed() << " "
+           << one_path_memory_running_timer.timeElapsed() << " "
+
+           << many_pre_timer.timeElapsed() << " "
+           << many_running_timer.timeElapsed() << " "
+           << many_path_pre_timer.timeElapsed() << " "
+           << many_path_running_timer.timeElapsed() << " "
+           << many_path_memory_running_timer.timeElapsed() << std::endl;
     output.close();
     exit(0);
 }
