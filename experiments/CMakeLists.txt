@@ -12,6 +12,9 @@ target_link_libraries(complexity zipHMM)
 add_executable(bench_viterbi bench_viterbi.cpp)
 target_link_libraries(bench_viterbi zipHMM)
 
+add_executable(bench_posterior bench_posterior.cpp)
+target_link_libraries(bench_posterior zipHMM)
+
 add_executable(backward backward.cpp)
 target_link_libraries(backward zipHMM)
 
@@ -20,12 +23,6 @@ target_link_libraries(forward_experiment zipHMM)
 
 add_executable(posterior posterior.cpp)
 target_link_libraries(posterior zipHMM)
-
-add_executable(posterior_sequence posterior_sequence.cpp)
-target_link_libraries(posterior_sequence zipHMM)
-
-add_executable(posterior_model posterior_model.cpp)
-target_link_libraries(posterior_model zipHMM)
 
 add_executable(gen_fibonacci gen_fibonacci.cpp)
 
