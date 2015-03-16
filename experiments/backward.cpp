@@ -94,14 +94,15 @@ int main(int argc, char **argv) {
 
         zipHMM::HMMSuite b;
         b.read_seq(seq_filename, alphabet_size, min_num_of_evals);
-        zipHMM::Matrix backward_table;
+        zipHMM::Matrix *backward_table = new zipHMM::Matrix[b.get_seq_length(A.get_height())];
         b.backward(pi, A, B, scales, backward_table);
 
         std::cout << "First column:" << std::endl;
-        for (size_t i = 0; i < backward_table.get_height(); ++i) {
-            std::cout << backward_table(i, 0) << " ";
+        for (size_t i = 0; i < A.get_height(); ++i) {
+            std::cout << backward_table[0](i, 0) << " ";
         }
         std::cout << std::endl;
+        delete [] backward_table;
     }
 
     exit(0);

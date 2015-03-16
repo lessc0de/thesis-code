@@ -32,6 +32,7 @@
 #include <vector>
 #include <iostream>
 #include <cstdlib>
+#include <unistd.h>
 
 #ifdef WITH_OMP
 #include<omp.h>
@@ -52,6 +53,7 @@ int main(int argc, char **argv) {
     std::string sequence_filename = argv[2];
 
     std::vector<unsigned> my_viterbi_path;
+
     zipHMM::HMMSuite h;
     size_t alphabet_size = 4;
     size_t min_num_of_evals = 0;
