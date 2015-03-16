@@ -73,7 +73,7 @@ namespace zipHMM {
         size_t no_states = A.get_height();
         Matrix res(no_states, 1);
 
-        Matrix *viterbi_table;
+        Matrix *viterbi_table = 0;
         size_t no_blocks = std::ceil(std::sqrt(sequence.size()));
         size_t block_width = std::ceil(std::sqrt(sequence.size()));
 
@@ -97,7 +97,7 @@ namespace zipHMM {
         Matrix tmp;
         for(size_t c = 1; c < sequence.size(); ++c) {
             if (compute_path && memory_save) {
-                Matrix::maxMult<LogSpace>(symbol2matrix[sequence[c]], res, tmp);
+                Matrix::maxMatrixVectorMult<LogSpace>(symbol2matrix[sequence[c]], res, tmp);
                 if (c % block_width == 0) {
                     // Checkpoint.
                     Matrix::copy(tmp, viterbi_table[c / block_width]);
@@ -105,7 +105,7 @@ namespace zipHMM {
             } else if (compute_path) {
                 Matrix::argMaxAndMaxMatrixVectorMult<LogSpace>(symbol2matrix[sequence[c]], res, tmp, viterbi_table[c]);
             } else {
-                Matrix::maxMult<LogSpace>(symbol2matrix[sequence[c]], res, tmp);
+                Matrix::maxMatrixVectorMult<LogSpace>(symbol2matrix[sequence[c]], res, tmp);
             }
             Matrix::copy(tmp, res);
         }
@@ -159,7 +159,8 @@ namespace zipHMM {
             deduct_path(sequence, viterbi_path, symbol2argmax_matrix);
         }
 
-        delete [] viterbi_table;
+        if (viterbi_table)
+            delete [] viterbi_table;
 
         return path_ll;
     }
