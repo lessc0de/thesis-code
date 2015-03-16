@@ -29,13 +29,13 @@ namespace zipHMM {
         double forward_seqs(const Matrix &pi, const Matrix &A, const Matrix &B, std::vector<double> &scales) const;
         double forward_seq(const Matrix &pi, const Matrix &A, const Matrix &B,
                            const std::vector<unsigned> &sequence, const double *symbol2scale,
-                           const Matrix *symbol2matrix, std::vector<double> &scales, bool compute_matrix, Matrix &forward_table) const;
+                           const Matrix *symbol2matrix, std::vector<double> &scales, bool compute_matrix, Matrix *forward_table) const;
 
         double forward(const Matrix &pi, const Matrix &A, const Matrix &B) const;
 
         double forward(const Matrix &pi, const Matrix &A, const Matrix &B, std::vector<double> &scales) const;
 
-        double forward(const Matrix &pi, const Matrix &A, const Matrix &B, std::vector<double> &scales, Matrix &forward_table) const;
+        double forward(const Matrix &pi, const Matrix &A, const Matrix &B, std::vector<double> &scales, Matrix *forward_table) const;
 
         double pthread_forward(const Matrix &pi, const Matrix &A, const Matrix &B,
                                const std::string &device_filename = DEFAULT_DEVICE_FILENAME) const;
@@ -51,9 +51,9 @@ namespace zipHMM {
 
         void backward_seq(const Matrix &pi, const Matrix &A, const Matrix &B,
                           const std::vector<unsigned> &sequence, const std::vector<double> &scales,
-                          const Matrix *symbol2matrix, Matrix &backward_table) const;
+                          const Matrix *symbol2matrix, Matrix *backward_table) const;
 
-        void backward(const Matrix &pi, const Matrix &A, const Matrix &B, const std::vector<double> &scales, Matrix &backward_table) const;
+        void backward(const Matrix &pi, const Matrix &A, const Matrix &B, const std::vector<double> &scales, Matrix *backward_table) const;
 
         double viterbi_seq(const Matrix &pi, const Matrix &A, const Matrix &B,
                            const std::vector<unsigned> &sequence,
@@ -114,7 +114,7 @@ namespace zipHMM {
         void read_no_states_seqs_from_directory(const std::string &no_states_dir, size_t no_states);
         void read_seq_from_stream(std::ifstream &in, size_t no_states);
 
-        double forward_helper(const Matrix &pi, const Matrix &A, const Matrix &B, std::vector<double> &scales, bool compute_path, Matrix &forward_table) const;
+        double forward_helper(const Matrix &pi, const Matrix &A, const Matrix &B, std::vector<double> &scales, bool compute_path, Matrix *forward_table) const;
 
         void forward_compute_symbol2scale_and_symbol2matrix(Matrix *symbol2matrix, double *symbol2scale,
                                                             const Matrix &A, const Matrix &B,
