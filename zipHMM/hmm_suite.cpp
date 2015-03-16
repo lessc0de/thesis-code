@@ -73,26 +73,24 @@ namespace zipHMM {
         size_t no_states = A.get_height();
         Matrix res(no_states, 1);
 
-        Matrix viterbi_table;
+        Matrix *viterbi_table;
         size_t no_blocks = std::ceil(std::sqrt(sequence.size()));
         size_t block_width = std::ceil(std::sqrt(sequence.size()));
 
         if (compute_path && memory_save) {
             // Viterbi table contains the value of the last column of each
             // block.
-            viterbi_table.reset(no_blocks, no_states);
+            viterbi_table = new Matrix[no_blocks];
         } else if (compute_path) {
             // Viterbi table contains a pointer for each cell.
-            viterbi_table.reset(sequence.size(), no_states);
+            viterbi_table = new Matrix[sequence.size()];
         }
 
         // Init.
         init_apply_em_log_prob(res, pi, B, sequence[0]);
 
         if (compute_path && memory_save) {
-            for (size_t i = 0; i < no_states; ++i) {
-                viterbi_table(0, i) = res(i, 0);
-            }
+            Matrix::copy(res, viterbi_table[0]);
         }
 
         // Recursion.
@@ -102,16 +100,10 @@ namespace zipHMM {
                 Matrix::maxMult<LogSpace>(symbol2matrix[sequence[c]], res, tmp);
                 if (c % block_width == 0) {
                     // Checkpoint.
-                    for (size_t i = 0; i < no_states; ++i) {
-                        viterbi_table(c / block_width, i) = tmp(i, 0);
-                    }
+                    Matrix::copy(tmp, viterbi_table[c / block_width]);
                 }
             } else if (compute_path) {
-                Matrix where;
-                Matrix::argMaxAndMaxMult<LogSpace>(symbol2matrix[sequence[c]], res, tmp, where);
-                for (size_t i = 0; i < no_states; ++i) {
-                    viterbi_table(c, i) = where(i, 0);
-                }
+                Matrix::argMaxAndMaxMult<LogSpace>(symbol2matrix[sequence[c]], res, tmp, viterbi_table[c]);
             } else {
                 Matrix::maxMult<LogSpace>(symbol2matrix[sequence[c]], res, tmp);
             }
@@ -141,9 +133,7 @@ namespace zipHMM {
                 for (int i = no_blocks - 1; i >= 0; --i) {
                     // Put the last column of the previous block column into
                     // res vector.
-                    for (size_t j = 0; j < no_states; ++j) {
-                        res(j, 0) = viterbi_table(i, j);
-                    }
+                    Matrix::copy(viterbi_table[i], res);
 
                     // Recompute block.
                     for(size_t c = i * block_width + 1; c < sequence.size() && c < (i + 1) * block_width + 1; ++c) {
@@ -167,12 +157,14 @@ namespace zipHMM {
 
             } else {
                 for (size_t c = sequence.size() - 1; c > 0; --c) {
-                    viterbi_path[c - 1] = viterbi_table(c, viterbi_path[c]);
+                    viterbi_path[c - 1] = viterbi_table[c](viterbi_path[c], 0);
                 }
             }
             // Recreate the original HMMSuite path.
             deduct_path(sequence, viterbi_path, symbol2argmax_matrix);
         }
+
+        delete [] viterbi_table;
 
         return path_ll;
     }
