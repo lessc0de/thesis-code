@@ -170,45 +170,44 @@ namespace zipHMM {
     }
 
     void HMMSuite::deduct_path(const std::vector<unsigned> &sequence,
-                              std::vector<unsigned> &path,
-                              const Matrix *symbol2argmax_matrix) const {
-        // Convert the vectors to lists.
-        std::list<unsigned> orig_seq(sequence.begin(), sequence.end());
-        std::list<unsigned> orig_path(path.begin(), path.end());
+                               std::vector<unsigned> &path,
+                               const Matrix *symbol2argmax_matrix) const {
+        std::stack<unsigned> seq_stack;
+        for (std::vector<unsigned>::const_reverse_iterator seq_it = sequence.rbegin(); seq_it != sequence.rend(); ++seq_it) {
+            seq_stack.push(*seq_it);
+        }
 
-        // Iterate through the list. Insert/delete symbols.
-        std::list<unsigned>::iterator seq_it = orig_seq.begin();
-        std::list<unsigned>::iterator path_it = orig_path.begin();
-        while (seq_it != orig_seq.end()) {
-            // Check if character at this position is an extended character.
-            if (*seq_it >= orig_alphabet_size) {
-                // Insert the state in the list.
-                --path_it;
-                unsigned prev_state = *path_it;
-                ++path_it;
-                unsigned next_state = *path_it;
-                unsigned current_state = symbol2argmax_matrix[*seq_it](prev_state, next_state);
-                orig_path.insert(path_it, current_state);
-                --path_it;
+        std::stack<unsigned> path_stack;
+        for (std::vector<unsigned>::const_reverse_iterator path_it = path.rbegin(); path_it != path.rend(); ++path_it) {
+            path_stack.push(*path_it);
+        }
+        std::vector<unsigned> orig_path;
 
-                // Insert the symbol in the list.
-                std::pair<size_t, size_t> p = get_pair(*seq_it);
-                orig_seq.insert(seq_it, p.first);
-                orig_seq.insert(seq_it, p.second);
-                std::list<unsigned>::iterator seq_it_copy = seq_it;
-                --seq_it;
-                --seq_it;
-                orig_seq.erase(seq_it_copy);
+        while (!seq_stack.empty()) {
+            const unsigned c = seq_stack.top();
+            seq_stack.pop();
+
+            const unsigned state = path_stack.top();
+            if (c >= orig_alphabet_size) {
+                // Recreate original sequence.
+                std::pair<size_t, size_t> p = get_pair(c);
+                seq_stack.push(p.second);
+                seq_stack.push(p.first);
+
+                // Recreate path.
+                const unsigned prev_state = orig_path.back();
+                const unsigned intermediate_state = symbol2argmax_matrix[c](prev_state, state);
+                path_stack.push(intermediate_state);
             } else {
-                ++seq_it;
-                ++path_it;
+                orig_path.push_back(state);
+                path_stack.pop();
             }
         }
 
-        // Convert the list to vectors.
+        // For some reason it is more efficient to copy orig_path into path,
+        // instead of just pushing to path in the first place.
         path.clear();
         path.insert(path.begin(), orig_path.begin(), orig_path.end());
-
     }
 
     double HMMSuite::viterbi_helper(const Matrix &pi, const Matrix &A, const Matrix &B, const bool compute_path, const bool memory_save, std::vector<unsigned> &viterbi_path) const {
