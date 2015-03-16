@@ -246,6 +246,47 @@ namespace zipHMM {
 
         template<typename Space>
         static inline
+        void argMaxAndMaxMatrixVectorMult(const Matrix &lhs, const Matrix &rhs, Matrix &res, Matrix &argmax_res) {
+            const size_t depth = lhs.width;
+
+            res.reset(lhs.height, 1);
+            argmax_res.reset(lhs.height, 1);
+
+            for(size_t i = 0; i < lhs.height; ++i) {
+                double val = Space::mult(lhs(i, 0), rhs(0, 0));
+                size_t max_k = 0;
+                for(size_t k = 1; k < depth; ++k) {
+                    double newVal = Space::mult(lhs(i, k), rhs(k, 0));
+                    if(newVal > val) {
+                        val = newVal;
+                        max_k = k;
+                    }
+                }
+                res(i, 0) = val;
+                argmax_res(i, 0) = max_k;
+            }
+        }
+
+        template<typename Space>
+        static inline
+        void maxMatrixVectorMult(const Matrix &lhs, const Matrix &rhs, Matrix &res) {
+            const size_t depth = lhs.width;
+
+            res.reset(lhs.height, 1);
+
+            for(size_t i = 0; i < lhs.height; ++i) {
+                double val = Space::mult(lhs(i, 0), rhs(0, 0));
+                for(size_t k = 1; k < depth; ++k) {
+                    double newVal = Space::mult(lhs(i, k), rhs(k, 0));
+                    if(newVal > val)
+                        val = newVal;
+                }
+                res(i, 0) = val;
+            }
+        }
+
+        template<typename Space>
+        static inline
         void maxMult(const Matrix &lhs, const Matrix &rhs, Matrix &res) {
             const size_t depth = lhs.width;
 

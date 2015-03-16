@@ -103,7 +103,7 @@ namespace zipHMM {
                     Matrix::copy(tmp, viterbi_table[c / block_width]);
                 }
             } else if (compute_path) {
-                Matrix::argMaxAndMaxMult<LogSpace>(symbol2matrix[sequence[c]], res, tmp, viterbi_table[c]);
+                Matrix::argMaxAndMaxMatrixVectorMult<LogSpace>(symbol2matrix[sequence[c]], res, tmp, viterbi_table[c]);
             } else {
                 Matrix::maxMult<LogSpace>(symbol2matrix[sequence[c]], res, tmp);
             }
@@ -126,8 +126,7 @@ namespace zipHMM {
             viterbi_path[sequence.size() - 1] = unsigned(end_point);
             if (memory_save) {
                 // Block contains a pointer for each cell.
-                Matrix block;
-                block.reset(block_width, no_states);
+                Matrix block[block_width];
 
                 // Iterate over blocks from right to left.
                 for (int i = no_blocks - 1; i >= 0; --i) {
@@ -137,11 +136,7 @@ namespace zipHMM {
 
                     // Recompute block.
                     for(size_t c = i * block_width + 1; c < sequence.size() && c < (i + 1) * block_width + 1; ++c) {
-                        Matrix where;
-                        Matrix::argMaxAndMaxMult<LogSpace>(symbol2matrix[sequence[c]], res, tmp, where);
-                        for (size_t j = 0; j < no_states; ++j) {
-                            block((c - 1) % block_width, j) = where(j, 0);
-                        }
+                        Matrix::argMaxAndMaxMatrixVectorMult<LogSpace>(symbol2matrix[sequence[c]], res, tmp, block[(c - 1) % block_width]);
                         Matrix::copy(tmp, res);
                     }
 
@@ -151,7 +146,7 @@ namespace zipHMM {
                         if (c >= sequence.size()) {
                             continue;
                         }
-                        viterbi_path[c - 1] = block(j, viterbi_path[c]);
+                        viterbi_path[c - 1] = block[j](viterbi_path[c], 0);
                     }
                 }
 
@@ -204,8 +199,8 @@ namespace zipHMM {
             }
         }
 
-        // For some reason it is more efficient to copy orig_path into path,
-        // instead of just pushing to path in the first place.
+        // It is more efficient to push to a local vector and then copy it to
+        // the input parameter.
         path.clear();
         path.insert(path.begin(), orig_path.begin(), orig_path.end());
     }
