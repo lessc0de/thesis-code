@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
 
     h.read_seq(sequence_filename, alphabet_size, min_num_of_evals);
 
-    for (int i = 0; i < 50; ++i) {
+    for (int i = 0; i < 10; ++i) {
         h.posterior_decoding(init_probs, trans_probs, em_probs, my_viterbi_path);
     }
 
