@@ -354,34 +354,36 @@ namespace zipHMM {
 
 
     void HMMSuite::backward_seq(const Matrix &pi, const Matrix &A, const Matrix &B, const std::vector<unsigned> &sequence, const std::vector<double> &scales, const Matrix *symbol2matrix, Matrix &backward_table) const {
-        Matrix res;
-        Matrix tmp;
         size_t no_states = A.get_height();
+        Matrix tmp;
+
+        Matrix *symbol2matrix2 = new Matrix[4];
+        for (size_t i = 0; i < 4; ++i) {
+            Matrix::transpose(symbol2matrix[i], symbol2matrix2[i]);
+        }
 
         size_t length = sequence.size();
         backward_table.reset(no_states, length);
 
+        Matrix res;
         // Initialize
-        res.reset(1, A.get_width());
-        for (size_t i = 0; i < res.get_width(); ++i) {
-            res(0, i) = 1.0;
+        res.reset(A.get_width(), 1);
+        for (size_t i = 0; i < res.get_height(); ++i) {
+            res(i, 0) = 1.0;
         }
         for (size_t j = 0; j < no_states; ++j) {
-            backward_table(j, length - 1) = res(0, j);
+            backward_table(j, length - 1) = res(j, 0);
         }
 
         // multiply matrices across the sequence
         for(size_t c = length - 2; c <= length - 2; --c) { // weird because of unsigned wrap around when negative.
-            Matrix::blas_mult(res, symbol2matrix[sequence[c + 1]], tmp);
+            Matrix::blas_matrix_vector_mult(symbol2matrix2[sequence[c + 1]], res, tmp);
             Matrix::copy(tmp, res);
 
+            const double scalar = scales[c+1];
             for (size_t j = 0; j < no_states; ++j) {
-                backward_table(j, c) = res(0, j);
-            }
-
-            // Scale the values in res using the scales vector.
-            for (size_t j = 0; j < res.get_width(); ++j) {
-                res(0, j) /= scales[c+1];
+                backward_table(j, c) = res(j, 0);
+                res(j, 0) /= scalar;
             }
         }
     }
