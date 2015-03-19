@@ -112,7 +112,7 @@ int main(int argc, char **argv) {
         zipHMM::HMMSuite v;
         size_t alphabet_size = 4;
         size_t min_num_of_evals = 0;
-        v.read_seq(sequence_filename, alphabet_size, min_num_of_evals);
+        v.read_seq(sequence_filename, alphabet_size, 16, min_num_of_evals);
         uncompressed_pre_timer.stop();
 
         uncompressed_running_timer.start();
@@ -126,7 +126,7 @@ int main(int argc, char **argv) {
         zipHMM::HMMSuite v2;
         size_t alphabet_size = 4;
         size_t min_num_of_evals = 0;
-        v2.read_seq(sequence_filename, alphabet_size, min_num_of_evals);
+        v2.read_seq(sequence_filename, alphabet_size, 16, min_num_of_evals);
         uncompressed_path_pre_timer.stop();
 
         uncompressed_path_running_timer.start();
@@ -139,7 +139,7 @@ int main(int argc, char **argv) {
         zipHMM::HMMSuite v2;
         size_t alphabet_size = 4;
         size_t min_num_of_evals = 0;
-        v2.read_seq(sequence_filename, alphabet_size, min_num_of_evals);
+        v2.read_seq(sequence_filename, alphabet_size, 16, min_num_of_evals);
 
         uncompressed_path_memory_running_timer.start();
         v2.viterbi(init_probs, trans_probs, em_probs, viterbi_path);
@@ -152,7 +152,7 @@ int main(int argc, char **argv) {
         zipHMM::HMMSuite v;
         size_t alphabet_size = 4;
         size_t min_num_of_evals = 1;
-        v.read_seq(sequence_filename, alphabet_size, min_num_of_evals);
+        v.read_seq(sequence_filename, alphabet_size, 16, min_num_of_evals);
         one_pre_timer.stop();
 
         one_running_timer.start();
@@ -166,7 +166,7 @@ int main(int argc, char **argv) {
         zipHMM::HMMSuite v2;
         size_t alphabet_size = 4;
         size_t min_num_of_evals = 1;
-        v2.read_seq(sequence_filename, alphabet_size, min_num_of_evals);
+        v2.read_seq(sequence_filename, alphabet_size, 16, min_num_of_evals);
         one_path_pre_timer.stop();
 
         T_prime = v2.get_seq_length(init_probs.get_height());
@@ -181,7 +181,7 @@ int main(int argc, char **argv) {
         zipHMM::HMMSuite v2;
         size_t alphabet_size = 4;
         size_t min_num_of_evals = 1;
-        v2.read_seq(sequence_filename, alphabet_size, min_num_of_evals);
+        v2.read_seq(sequence_filename, alphabet_size, 16, min_num_of_evals);
 
         one_path_memory_running_timer.start();
         v2.viterbi(init_probs, trans_probs, em_probs, true, viterbi_path);
@@ -194,8 +194,7 @@ int main(int argc, char **argv) {
         zipHMM::HMMSuite v;
         size_t alphabet_size = 4;
         size_t min_num_of_evals = 500;
-        v.read_seq(sequence_filename, alphabet_size, min_num_of_evals);
-        many_pre_timer.stop();
+        v.read_seq(sequence_filename, alphabet_size, 16, min_num_of_evals);
 
         many_running_timer.start();
         v.viterbi(init_probs, trans_probs, em_probs);
@@ -208,7 +207,7 @@ int main(int argc, char **argv) {
         zipHMM::HMMSuite v2;
         size_t alphabet_size = 4;
         size_t min_num_of_evals = 500;
-        v2.read_seq(sequence_filename, alphabet_size, min_num_of_evals);
+        v2.read_seq(sequence_filename, alphabet_size, 16, min_num_of_evals);
         many_path_pre_timer.stop();
 
         T_prime = v2.get_seq_length(init_probs.get_height());
@@ -223,7 +222,7 @@ int main(int argc, char **argv) {
         zipHMM::HMMSuite v2;
         size_t alphabet_size = 4;
         size_t min_num_of_evals = 500;
-        v2.read_seq(sequence_filename, alphabet_size, min_num_of_evals);
+        v2.read_seq(sequence_filename, alphabet_size, 16, min_num_of_evals);
 
         many_path_memory_running_timer.start();
         v2.viterbi(init_probs, trans_probs, em_probs, true, viterbi_path);
