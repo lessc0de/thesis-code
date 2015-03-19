@@ -743,8 +743,10 @@ namespace zipHMM {
         if(!nStatesSave_init_empty) {
             no_states_save = nStatesSave.back();
             for(std::vector<size_t>::iterator it = nStatesSave.begin(); it != nStatesSave.end(); ++it) {
-                nStates2t_MM[*it] = Matrix::time_blas_mult((*it));
-                nStates2t_MV[*it] = Matrix::time_blas_matrix_vector_mult((*it));
+                // nStates2t_MM[*it] = Matrix::time_blas_mult((*it));
+                // nStates2t_MV[*it] = Matrix::time_blas_matrix_vector_mult((*it));
+                nStates2t_MM[*it] = Matrix::time_argMaxMult((*it));
+                nStates2t_MV[*it] = Matrix::time_maxMatrixVectorMult((*it));
             }
         }
 

@@ -401,6 +401,72 @@ namespace zipHMM {
             return timer.timeElapsed() / TIME_BLAS_MATRIX_VECTOR_MULT_TIMES;
         }
 
+#define TIME_ARG_MAX_MULT 200
+
+        static inline
+        size_t time_argMaxMult(const size_t N) {
+            Matrix lhs(N, N);
+            Matrix rhs(N, N);
+            size_t leftRow = N;
+            size_t rightCol = N;
+
+            for(size_t r = 0; r < N; ++r) {
+                for(size_t c = 0; c < N; ++c) {
+                    lhs(r, c) = ((double) std::rand() / (RAND_MAX));
+                    rhs(r, c) = ((double) std::rand() / (RAND_MAX));
+                }
+            }
+
+            int res = 0;
+
+            Timer timer;
+            timer.start();
+
+            for(unsigned i = 0; i < TIME_BLAS_MATRIX_VECTOR_MULT_TIMES; ++i) {
+                res += argMaxMult<LogSpace>(lhs, leftRow, rhs, rightCol);
+            }
+
+            timer.stop();
+
+            if (res < 0) {
+                std::cout << "Never happens" << std::endl;
+            }
+
+            return timer.timeElapsed() / TIME_ARG_MAX_MULT;
+        }
+
+#define TIME_MAX_MATRIX_VECTOR_MULT 200
+
+        static inline
+        size_t time_maxMatrixVectorMult(const size_t N) {
+            Matrix lhs(N, N);
+            Matrix rhs(N, 1);
+            Matrix res;
+
+            for(size_t r = 0; r < N; ++r) {
+                for(size_t c = 0; c < N; ++c) {
+                    lhs(r, c) = ((double) std::rand() / (RAND_MAX));
+                }
+                rhs(r, 0) = ((double) std::rand() / (RAND_MAX));
+            }
+
+            Timer timer;
+            timer.start();
+
+            for(unsigned i = 0; i < TIME_BLAS_MATRIX_VECTOR_MULT_TIMES; ++i) {
+                maxMatrixVectorMult<LogSpace>(lhs, rhs, res);
+                copy(res, rhs);
+            }
+
+            timer.stop();
+
+            if (res(0, 0) < 0) {
+                std::cout << "Never happens" << std::endl;
+            }
+
+            return timer.timeElapsed() / TIME_MAX_MATRIX_VECTOR_MULT;
+        }
+
     };
 } // namespace
 
