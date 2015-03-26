@@ -29,6 +29,155 @@
 
 namespace zipHMM {
 
+    void HMMSuite::indexed_posterior_decoding(const Matrix &pi, const Matrix &A, const Matrix &B, size_t i, size_t j,
+                                              std::vector<unsigned> &posterior_path) const {
+        size_t length = get_seq_length(A.get_height());
+        std::vector<double> scales;
+
+        Matrix *forward_table = new Matrix[length];
+        Matrix *backward_table = new Matrix[length];
+
+        // Compute forward table.
+        forward(pi, A, B, scales, forward_table);
+
+        // Compute backward table.
+        backward(pi, A, B, scales, backward_table);
+
+        // find alphabet and seqs for given number of states
+        size_t no_states = A.get_width();
+        size_t alphabet_size = 0;
+        std::vector<std::vector< unsigned> > sequences;
+        for(std::map<size_t, std::vector<std::vector<unsigned> > >::const_iterator it = nStates2seqs.begin(); it != nStates2seqs.end(); ++it) {
+            if(it->first >= no_states) {
+                sequences = it->second;
+                alphabet_size = nStates2alphabet_size.find(it->first)->second;
+                break;
+            }
+        }
+        if(sequences.empty()) {
+            sequences = nStates2seqs.rbegin()->second;
+            alphabet_size = nStates2alphabet_size.rbegin()->second;
+        }
+
+        // Compute the length of the original sequence that each symbol
+        // corresponds to.
+        std::map<size_t, size_t> symbol2length;
+        for(size_t i = 0; i < orig_alphabet_size; ++i) {
+            symbol2length[i] = 1;
+        }
+        for(size_t i = orig_alphabet_size; i < alphabet_size; ++i) {
+            std::pair<size_t, size_t> p = get_pair(i);
+            symbol2length[i] = symbol2length[p.first] + symbol2length[p.second];
+        }
+
+        // Compute a mapping from original sequence indexes to each new index.
+        std::map<size_t, size_t> orig_index2new_index;
+        std::vector<unsigned> sequence = sequences[0];
+        size_t orig_index = 0;
+        for(std::vector<unsigned>::const_iterator it = sequence.begin(); it != sequence.end(); ++it) {
+            orig_index += symbol2length[*it];
+            orig_index2new_index[orig_index] = it - sequence.begin();
+        }
+
+        // Compute the start and end intervals for which to recompute the
+        // forward table.
+        std::map<size_t, size_t>::const_iterator comp_i_it = orig_index2new_index.lower_bound(i);
+        std::map<size_t, size_t>::const_iterator comp_j_it = orig_index2new_index.lower_bound(j);
+
+        size_t orig_i;
+        size_t orig_j;
+        size_t comp_i;
+        size_t comp_j;
+        if (comp_i_it->second != 0) {
+            --comp_i_it;
+            orig_i = comp_i_it->first;
+        } else {
+            orig_i = 0;
+        }
+        comp_i = comp_i_it->second;
+        orig_j = comp_j_it->first;
+        comp_j = comp_j_it->second + 1;
+
+        std::cout << "Forward computation should start in column " << comp_i
+                  << " and continue uncompressed for original sequence from index " << orig_i
+                  << " to index " << orig_j
+                  << std::endl;
+
+        // Compute the substring of the sequence for which to compute the
+        // forward table.
+        std::vector<unsigned> sub_seq;
+        deduct_subsequence(sequence, sub_seq, comp_i, comp_j);
+
+        // Compute forward and backward tables for subsequence.
+        double *symbol2scale = new double[alphabet_size];
+        Matrix *symbol2matrix = new Matrix[alphabet_size];
+
+        forward_compute_symbol2scale_and_symbol2matrix(symbol2matrix, symbol2scale, A, B, alphabet_size);
+
+        std::vector<double> sub_scales;
+        Matrix *sub_forward_table = new Matrix[sub_seq.size()];
+        Matrix *sub_backward_table = new Matrix[sub_seq.size()];
+        Matrix start_vector;
+        if (orig_i == 0) {
+            Matrix::copy(pi, start_vector);
+        } else {
+            Matrix::copy(forward_table[0], start_vector);
+        }
+
+        forward_seq(start_vector, A, B, sub_seq, symbol2scale, symbol2matrix, sub_scales, true, sub_forward_table);
+        backward_seq(pi, A, B, backward_table[0], sub_seq, sub_scales, symbol2matrix, sub_backward_table);
+
+        delete [] symbol2scale;
+        delete [] symbol2matrix;
+        delete [] forward_table;
+        delete [] backward_table;
+
+        // Compute posterior decoding
+        posterior_path.resize(sub_seq.size());
+        for(size_t c = 0; c < sub_seq.size(); ++c) {
+            double max_val = - std::numeric_limits<double>::max();
+            size_t max_state = 0;
+            for(size_t r = 0; r < no_states; ++r) {
+                double val = sub_forward_table[c](r, 0) * sub_backward_table[c](r, 0);
+                if (val > max_val) {
+                    max_val = val;
+                    max_state = r;
+                }
+            }
+            posterior_path[c] = unsigned(max_state);
+        }
+
+        delete [] sub_forward_table;
+        delete [] sub_backward_table;
+    }
+
+    void HMMSuite::deduct_subsequence(const std::vector<unsigned> &comp_seq,
+                                      std::vector<unsigned> &orig_subseq,
+                                      size_t i, size_t j) const {
+        assert(j <= comp_seq.size());
+        assert(i < j);
+        std::stack<unsigned> seq_stack;
+        for (std::vector<unsigned>::const_reverse_iterator seq_it = comp_seq.rbegin() + comp_seq.size() - j; seq_it != comp_seq.rbegin() + comp_seq.size() - i; ++seq_it) {
+            seq_stack.push(*seq_it);
+        }
+
+        while (!seq_stack.empty()) {
+            const unsigned c = seq_stack.top();
+            seq_stack.pop();
+
+            if (c >= orig_alphabet_size) {
+                // Recreate original sequence.
+                std::pair<size_t, size_t> p = get_pair(c);
+                seq_stack.push(p.second);
+                seq_stack.push(p.first);
+
+            } else {
+                orig_subseq.push_back(c);
+            }
+        }
+    }
+
+
     void HMMSuite::posterior_decoding(const Matrix &pi, const Matrix &A, const Matrix &B,
                                       std::vector<unsigned> &posterior_path) const {
         if (get_alphabet_size(A.get_height()) != get_orig_alphabet_size()) {
@@ -333,9 +482,15 @@ namespace zipHMM {
 
         forward_compute_symbol2scale_and_symbol2matrix(symbol2matrix, symbol2scale, A, B, alphabet_size);
 
+        Matrix ones;
+        ones.reset(A.get_width(), 1);
+        for (size_t i = 0; i < ones.get_height(); ++i) {
+            ones(i, 0) = 1.0;
+        }
+
         for(std::vector<std::vector<unsigned> >::const_iterator it = sequences.begin(); it != sequences.end(); ++it) {
             const std::vector<unsigned> &sequence = (*it);
-            backward_seq(pi, A, B, sequence, scales, symbol2matrix, backward_table);
+            backward_seq(pi, A, B, ones, sequence, scales, symbol2matrix, backward_table);
         }
 
         delete[] symbol2scale;
@@ -343,7 +498,7 @@ namespace zipHMM {
     }
 
 
-    void HMMSuite::backward_seq(const Matrix &pi, const Matrix &A, const Matrix &B, const std::vector<unsigned> &sequence, const std::vector<double> &scales, const Matrix *symbol2matrix, Matrix *backward_table) const {
+    void HMMSuite::backward_seq(const Matrix &pi, const Matrix &A, const Matrix &B, const Matrix &end, const std::vector<unsigned> &sequence, const std::vector<double> &scales, const Matrix *symbol2matrix, Matrix *backward_table) const {
         size_t no_states = A.get_height();
 
         // Transpose matrices to make matrix multiplications more efficient.
@@ -355,11 +510,7 @@ namespace zipHMM {
         size_t length = sequence.size();
 
         Matrix res;
-        // Initialize
-        res.reset(A.get_width(), 1);
-        for (size_t i = 0; i < res.get_height(); ++i) {
-            res(i, 0) = 1.0;
-        }
+        Matrix::copy(end, res);
         Matrix::copy(res, backward_table[length - 1]);
 
         // multiply matrices across the sequence

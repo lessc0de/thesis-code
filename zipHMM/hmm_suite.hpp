@@ -49,7 +49,7 @@ namespace zipHMM {
         double mr_pthread_forward(const Matrix &pi, const Matrix &A, const Matrix &B,
                                   const std::string &device_filename = DEFAULT_DEVICE_FILENAME) const;
 
-        void backward_seq(const Matrix &pi, const Matrix &A, const Matrix &B,
+        void backward_seq(const Matrix &pi, const Matrix &A, const Matrix &B, const Matrix &end,
                           const std::vector<unsigned> &sequence, const std::vector<double> &scales,
                           const Matrix *symbol2matrix, Matrix *backward_table) const;
 
@@ -73,6 +73,9 @@ namespace zipHMM {
 
         void posterior_decoding(const Matrix &pi, const Matrix &A, const Matrix &B,
                                 std::vector<unsigned> &posterior_path) const;
+
+        void indexed_posterior_decoding(const Matrix &pi, const Matrix &A, const Matrix &B, size_t i, size_t j,
+                                        std::vector<unsigned> &posterior_path) const;
 
         size_t get_orig_seq_length() const { return orig_seq_length; }
         size_t get_orig_alphabet_size() const { return orig_alphabet_size; }
@@ -139,6 +142,11 @@ namespace zipHMM {
         void deduct_path(const std::vector<unsigned> &sequence,
                          std::vector<unsigned> &path,
                          const Matrix *symbol2matrixR) const;
+
+        void deduct_subsequence(const std::vector<unsigned> &comp_sequence,
+                                std::vector<unsigned> &orig_subsequence,
+                                size_t i, size_t j) const;
+
 
         double viterbi_helper(const Matrix &pi, const Matrix &A, const Matrix &B,
                               const bool compute_path, const bool memory_save, std::vector<unsigned> &viterbi_path) const;

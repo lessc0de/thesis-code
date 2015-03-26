@@ -31,3 +31,6 @@ target_link_libraries(profile_viterbi zipHMM profiler)
 
 add_executable(profile_posterior profile_posterior.cpp)
 target_link_libraries(profile_posterior zipHMM profiler)
+
+add_executable(indexed_posterior indexed_posterior.cpp)
+target_link_libraries(indexed_posterior zipHMM)
