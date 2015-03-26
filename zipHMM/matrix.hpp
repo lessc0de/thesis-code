@@ -404,11 +404,11 @@ namespace zipHMM {
 #define TIME_ARG_MAX_MULT 200
 
         static inline
-        size_t time_argMaxMult(const size_t N) {
+        double time_argMaxMult(const size_t N) {
             Matrix lhs(N, N);
             Matrix rhs(N, N);
-            size_t leftRow = N;
-            size_t rightCol = N;
+            size_t leftRow = N - 1;
+            size_t rightCol = N - 1;
 
             for(size_t r = 0; r < N; ++r) {
                 for(size_t c = 0; c < N; ++c) {
@@ -438,7 +438,7 @@ namespace zipHMM {
 #define TIME_MAX_MATRIX_VECTOR_MULT 200
 
         static inline
-        size_t time_maxMatrixVectorMult(const size_t N) {
+        double time_maxMatrixVectorMult(const size_t N) {
             Matrix lhs(N, N);
             Matrix rhs(N, 1);
             Matrix res;
