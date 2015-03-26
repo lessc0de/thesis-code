@@ -70,7 +70,9 @@ int main(int argc, char **argv) {
         int min_num_of_evals = 500;
         f.read_seq(seq_filename, alphabet_size, min_num_of_evals);
 
-        f.indexed_posterior_decoding(pi, A, B, 0, f.get_orig_seq_length(), zip_pd_path);
+        // f.indexed_posterior_decoding(pi, A, B, 0, f.get_orig_seq_length(), zip_pd_path);
+        f.indexed_posterior_decoding(pi, A, B, 10, f.get_orig_seq_length(), zip_pd_path);
+        zip_pd_path.insert(zip_pd_path.begin(), ref_pd_path.begin(), ref_pd_path.begin() + 10);
     }
 
     if (ref_pd_path != zip_pd_path) {

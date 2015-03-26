@@ -84,7 +84,7 @@ namespace zipHMM {
         std::map<size_t, size_t>::const_iterator comp_i_it = orig_index2new_index.lower_bound(i);
         std::map<size_t, size_t>::const_iterator comp_j_it = orig_index2new_index.lower_bound(j);
 
-        size_t orig_i;
+        int orig_i;
         size_t orig_j;
         size_t comp_i;
         size_t comp_j;
@@ -121,11 +121,13 @@ namespace zipHMM {
         if (orig_i == 0) {
             Matrix::copy(pi, start_vector);
         } else {
-            Matrix::copy(forward_table[0], start_vector);
+            Matrix::copy(forward_table[comp_i], start_vector);
+            sub_seq.erase(sub_seq.begin());
+            orig_i -= 1;
         }
 
         forward_seq(start_vector, A, B, sub_seq, symbol2scale, symbol2matrix, sub_scales, true, sub_forward_table);
-        backward_seq(pi, A, B, backward_table[0], sub_seq, sub_scales, symbol2matrix, sub_backward_table);
+        backward_seq(pi, A, B, backward_table[comp_i], sub_seq, sub_scales, symbol2matrix, sub_backward_table);
 
         delete [] symbol2scale;
         delete [] symbol2matrix;
@@ -133,8 +135,11 @@ namespace zipHMM {
         delete [] backward_table;
 
         // Compute posterior decoding
-        posterior_path.resize(sub_seq.size());
-        for(size_t c = 0; c < sub_seq.size(); ++c) {
+        std::cout << "orig_i: " << orig_i << std::endl
+                  << "i:      " << i << std::endl;
+
+        posterior_path.resize(0);
+        for(size_t c = i - orig_i; c < sub_seq.size(); ++c) {
             double max_val = - std::numeric_limits<double>::max();
             size_t max_state = 0;
             for(size_t r = 0; r < no_states; ++r) {
@@ -144,7 +149,7 @@ namespace zipHMM {
                     max_state = r;
                 }
             }
-            posterior_path[c] = unsigned(max_state);
+            posterior_path.push_back(unsigned(max_state));
         }
 
         delete [] sub_forward_table;
