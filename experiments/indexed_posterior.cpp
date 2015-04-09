@@ -55,68 +55,62 @@ int main(int argc, char **argv) {
     std::string seq_filename = argv[2];
 
 
-    for (int seed = 0; seed < 100; ++seed) {
+    // Reference implementation.
+    std::vector<unsigned> ref_pd_path;
+    {
+        zipHMM::Matrix pd_table;
+        std::vector<double> scales;
 
-        // Reference implementation.
-        std::vector<unsigned> ref_pd_path;
-        {
-            zipHMM::Matrix pd_table;
-            std::vector<double> scales;
+        zipHMM::posterior_decoding(seq_filename, pi, A, B, ref_pd_path, pd_table);
+    }
 
-            zipHMM::posterior_decoding(seq_filename, pi, A, B, ref_pd_path, pd_table);
+    // zipHMM implementation
+    std::vector<unsigned> zip_pd_path;
+    {
+        zipHMM::HMMSuite f;
+        int alphabet_size = 4;
+        int min_num_of_evals = 500;
+        f.read_seq(seq_filename, alphabet_size, min_num_of_evals);
+
+        std::srand(std::time(0));
+        int i = std::rand() % f.get_orig_seq_length();
+        int j = std::rand() % f.get_orig_seq_length();
+
+        if (i > j) {
+            int tmp = i;
+            i = j;
+            j = tmp;
         }
+        assert(i <= j);
 
-        // zipHMM implementation
-        std::vector<unsigned> zip_pd_path;
-        {
-            zipHMM::HMMSuite f;
-            int alphabet_size = 4;
-            int min_num_of_evals = 500;
-            f.read_seq(seq_filename, alphabet_size, min_num_of_evals);
+        f.indexed_posterior_decoding(pi, A, B, i, j, zip_pd_path);
+        zip_pd_path.insert(zip_pd_path.begin(), ref_pd_path.begin(), ref_pd_path.begin() + i);
+        zip_pd_path.insert(zip_pd_path.end(), ref_pd_path.begin() + j, ref_pd_path.end());
+    }
 
-            std::srand(seed);
-            // std::srand(std::time(0));
-            int i = std::rand() % f.get_orig_seq_length();
-            int j = std::rand() % f.get_orig_seq_length();
-
-            if (i > j) {
-                int tmp = i;
-                i = j;
-                j = tmp;
-            }
-            assert(i <= j);
-
-            f.indexed_posterior_decoding(pi, A, B, i, j, zip_pd_path);
-            zip_pd_path.insert(zip_pd_path.begin(), ref_pd_path.begin(), ref_pd_path.begin() + i);
-            zip_pd_path.insert(zip_pd_path.end(), ref_pd_path.begin() + j, ref_pd_path.end());
+    if (ref_pd_path.size() != zip_pd_path.size()) {
+        std::cout << "Paths not identical!" << std::endl;
+        std::cout << "Length: " << ref_pd_path.size() << "  ";
+        for (size_t i = 0; i < 20 && i < ref_pd_path.size(); ++i) {
+            std::cout << ref_pd_path[i] << " ";
         }
-
-        if (ref_pd_path.size() != zip_pd_path.size()) {
-            std::cout << "Paths not identical!" << std::endl;
-            std::cout << "Length: " << ref_pd_path.size() << "  ";
-            for (size_t i = 0; i < 20 && i < ref_pd_path.size(); ++i) {
-                std::cout << ref_pd_path[i] << " ";
-            }
-            std::cout << "..." << std::endl;
-            std::cout << "Length: " << zip_pd_path.size() << "  ";
-            for (size_t i = 0; i < 20 && i < zip_pd_path.size(); ++i) {
-                std::cout << zip_pd_path[i] << " ";
-            }
-            std::cout << "..." << std::endl;
-            exit(1);
-        } else {
-            std::cout << "Paths identical!" << std::endl;
-            for (size_t i = 0; i < 10; ++i) {
-                std::cout << ref_pd_path[i] << " ";
-            }
-            std::cout << "..." << std::endl;
-            for (size_t i = 0; i < 10; ++i) {
-                std::cout << zip_pd_path[i] << " ";
-            }
-            std::cout << "..." << std::endl;
+        std::cout << "..." << std::endl;
+        std::cout << "Length: " << zip_pd_path.size() << "  ";
+        for (size_t i = 0; i < 20 && i < zip_pd_path.size(); ++i) {
+            std::cout << zip_pd_path[i] << " ";
         }
-        std::cout << std::endl << "TEST " << seed << " PASSED!" << std::endl;
-        std::cout << std::endl << "================================================================================" << std::endl << std::endl;
+        std::cout << "..." << std::endl;
+        exit(1);
+    } else {
+        std::cout << "Paths identical!" << std::endl;
+        for (size_t i = 0; i < 10; ++i) {
+            std::cout << ref_pd_path[i] << " ";
+        }
+        std::cout << "..." << std::endl;
+        for (size_t i = 0; i < 10; ++i) {
+            std::cout << zip_pd_path[i] << " ";
+        }
+        std::cout << "..." << std::endl;
     }
 
     exit(0);
