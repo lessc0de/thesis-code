@@ -31,6 +31,26 @@ namespace zipHMM {
 
     void HMMSuite::indexed_posterior_decoding(const Matrix &pi, const Matrix &A, const Matrix &B, size_t i, size_t j,
                                               std::vector<unsigned> &posterior_path) const {
+        if(pi.get_width() != 1 || pi.get_height() != A.get_width() || A.get_height() != A.get_width() ||
+           B.get_height() != A.get_width() || B.get_width() != orig_alphabet_size) {
+            std::cerr << "Dimensions of input matrices do not match:" << std::endl;
+            std::cerr << "\t" << "pi width:  " << pi.get_width()  << std::endl;
+            std::cerr << "\t" << "pi height: " << pi.get_height() << std::endl;
+            std::cerr << "\t" << "A width:  "  << A.get_width()   << std::endl;
+            std::cerr << "\t" << "A height: "  << A.get_height()  << std::endl;
+            std::cerr << "\t" << "B width:  "  << B.get_width()   << std::endl;
+            std::cerr << "\t" << "B height: "  << B.get_height()  << std::endl;
+            std::exit(-1);
+        }
+        if(i > j) {
+            std::cerr << "Invalid interval: [" << i << ", " << j << ")" << std::endl;
+            std::exit(-2);
+        }
+        if(i == j) {
+            posterior_path.resize(0);
+            return;
+        }
+
         size_t length = get_seq_length(A.get_height());
         std::vector<double> scales;
 
@@ -76,38 +96,39 @@ namespace zipHMM {
         std::vector<unsigned> sequence = sequences[0];
         size_t orig_index = 0;
         for(std::vector<unsigned>::const_iterator it = sequence.begin(); it != sequence.end(); ++it) {
-            orig_index += symbol2length[*it];
             orig_index2new_index[orig_index] = it - sequence.begin();
+            orig_index += symbol2length[*it];
         }
 
         // Compute the start and end intervals for which to recompute the
         // forward table.
         std::cout << "orig_index2new_index:" << std::endl;
         for(std::map<size_t, size_t>::const_iterator it = orig_index2new_index.begin(); it != orig_index2new_index.end(); ++it) {
-            std::cout << it->first << " -> " << it->second << std::endl;
+            std::cout << "  " << it->first << " -> " << it->second << std::endl;
         }
-        std::map<size_t, size_t>::const_iterator comp_i_it = orig_index2new_index.lower_bound(i);
+        std::map<size_t, size_t>::const_iterator comp_i_it = orig_index2new_index.lower_bound(i + 1);
         std::map<size_t, size_t>::const_iterator comp_j_it = orig_index2new_index.lower_bound(j);
+        --comp_i_it;
 
         int orig_i;
         size_t orig_j;
         size_t comp_i;
         size_t comp_j;
-        if (comp_i_it->second != 0) {
-            orig_i = comp_i_it->first;
-        } else {
-            orig_i = 0;
-        }
-        if (i != 0) {
-            comp_i = comp_i_it->second + 1;
-        }
+        // if (comp_i_it->second != 0) {
+        orig_i = comp_i_it->first;
+        // } else {
+        //     orig_i = 0;
+        // }
+        comp_i = comp_i_it->second;
         orig_j = comp_j_it->first;
-        comp_j = comp_j_it->second + 1;
+        comp_j = comp_j_it->second;
 
-        std::cout << "Forward computation should start in column " << comp_i
-                  << " and continue uncompressed for original sequence from index " << orig_i
-                  << " to index " << orig_j
-                  << std::endl;
+        std::cout << "i: " << i << std::endl;
+        std::cout << "j: " << j << std::endl;
+        std::cout << "orig_i: " << orig_i << std::endl;
+        std::cout << "orig_j: " << orig_j << std::endl;
+        std::cout << "comp_i: " << comp_i << std::endl;
+        std::cout << "comp_j: " << comp_j << std::endl;
 
         // Compute the substring of the sequence for which to compute the
         // forward table.
@@ -119,13 +140,6 @@ namespace zipHMM {
             std::cout << *it << " ";
         }
         std::cout << std::endl;
-
-        std::cout << "sub_seq.size(): " << sub_seq.size() << std::endl;
-        std::cout << "orig_i: " << orig_i << std::endl;
-        std::cout << "orig_j: " << orig_j << std::endl;
-        std::cout << "comp_i: " << comp_i << std::endl;
-        std::cout << "comp_j: " << comp_j << std::endl;
-        std::cout << "orig_j - orig_i: " << orig_j - orig_i << std::endl;
 
         // Compute forward and backward tables for subsequence.
         double *symbol2scale = new double[alphabet_size];
@@ -142,11 +156,10 @@ namespace zipHMM {
             Matrix::copy(pi, start_vector);
         } else {
             Matrix::copy(forward_table[comp_i - 1], start_vector);
-            // orig_i -= 1;
         }
 
         forward_seq(start_vector, A, B, sub_seq, symbol2scale, symbol2matrix, sub_scales, true, sub_forward_table);
-        backward_seq(pi, A, B, backward_table[comp_i], sub_seq, sub_scales, symbol2matrix, sub_backward_table);
+        backward_seq(pi, A, B, backward_table[comp_j - 1], sub_seq, sub_scales, symbol2matrix, sub_backward_table);
 
         delete [] symbol2scale;
         delete [] symbol2matrix;
@@ -156,15 +169,18 @@ namespace zipHMM {
         // Compute posterior decoding
         posterior_path.resize(0);
         for(size_t c = i - orig_i; c < sub_seq.size() - (orig_j - j); ++c) {
+            std::cout << "Finding state for symbol " << sub_seq[c] << ": ";
             double max_val = - std::numeric_limits<double>::max();
             size_t max_state = 0;
             for(size_t r = 0; r < no_states; ++r) {
                 double val = sub_forward_table[c](r, 0) * sub_backward_table[c](r, 0);
+                std::cout << val << " ";
                 if (val > max_val) {
                     max_val = val;
                     max_state = r;
                 }
             }
+            std::cout << std::endl;
             posterior_path.push_back(unsigned(max_state));
         }
         std::cout << "posterior_path.size(): " << posterior_path.size() << std::endl;
@@ -176,7 +192,6 @@ namespace zipHMM {
     void HMMSuite::deduct_subsequence(const std::vector<unsigned> &comp_seq,
                                       std::vector<unsigned> &orig_subseq,
                                       size_t i, size_t j) const {
-        std::cout << "Deducting subsequence from index " << i << " to " << j << std::endl;
         assert(j <= comp_seq.size());
         assert(i < j);
 
