@@ -67,6 +67,7 @@ namespace zipHMM {
         }
         for(size_t i = orig_alphabet_size; i < alphabet_size; ++i) {
             std::pair<size_t, size_t> p = get_pair(i);
+            std::cout << i << ": " << p.first << " " << p.second << std::endl;
             symbol2length[i] = symbol2length[p.first] + symbol2length[p.second];
         }
 
@@ -81,6 +82,10 @@ namespace zipHMM {
 
         // Compute the start and end intervals for which to recompute the
         // forward table.
+        std::cout << "orig_index2new_index:" << std::endl;
+        for(std::map<size_t, size_t>::const_iterator it = orig_index2new_index.begin(); it != orig_index2new_index.end(); ++it) {
+            std::cout << it->first << " -> " << it->second << std::endl;
+        }
         std::map<size_t, size_t>::const_iterator comp_i_it = orig_index2new_index.lower_bound(i);
         std::map<size_t, size_t>::const_iterator comp_j_it = orig_index2new_index.lower_bound(j);
 
@@ -89,12 +94,12 @@ namespace zipHMM {
         size_t comp_i;
         size_t comp_j;
         if (comp_i_it->second != 0) {
-            --comp_i_it;
+            // --comp_i_it;
             orig_i = comp_i_it->first;
         } else {
             orig_i = 0;
         }
-        comp_i = comp_i_it->second;
+        comp_i = comp_i_it->second + 1;
         orig_j = comp_j_it->first;
         comp_j = comp_j_it->second + 1;
 
@@ -108,6 +113,19 @@ namespace zipHMM {
         std::vector<unsigned> sub_seq;
         deduct_subsequence(sequence, sub_seq, comp_i, comp_j);
 
+        std::cout << "sub_seq: ";
+        for (std::vector<unsigned>::const_iterator it = sub_seq.begin(); it != sub_seq.end(); ++it) {
+            std::cout << *it << " ";
+        }
+        std::cout << std::endl;
+
+        std::cout << "sub_seq.size(): " << sub_seq.size() << std::endl;
+        std::cout << "orig_i: " << orig_i << std::endl;
+        std::cout << "orig_j: " << orig_j << std::endl;
+        std::cout << "comp_i: " << comp_i << std::endl;
+        std::cout << "comp_j: " << comp_j << std::endl;
+        std::cout << "orig_j - orig_i: " << orig_j - orig_i << std::endl;
+
         // Compute forward and backward tables for subsequence.
         double *symbol2scale = new double[alphabet_size];
         Matrix *symbol2matrix = new Matrix[alphabet_size];
@@ -117,13 +135,13 @@ namespace zipHMM {
         std::vector<double> sub_scales;
         Matrix *sub_forward_table = new Matrix[sub_seq.size()];
         Matrix *sub_backward_table = new Matrix[sub_seq.size()];
+
         Matrix start_vector;
         if (orig_i == 0) {
             Matrix::copy(pi, start_vector);
         } else {
             Matrix::copy(forward_table[comp_i], start_vector);
-            sub_seq.erase(sub_seq.begin());
-            orig_i -= 1;
+            // orig_i -= 1;
         }
 
         forward_seq(start_vector, A, B, sub_seq, symbol2scale, symbol2matrix, sub_scales, true, sub_forward_table);
@@ -135,9 +153,6 @@ namespace zipHMM {
         delete [] backward_table;
 
         // Compute posterior decoding
-        std::cout << "orig_i: " << orig_i << std::endl
-                  << "i:      " << i << std::endl;
-
         posterior_path.resize(0);
         for(size_t c = i - orig_i; c < sub_seq.size(); ++c) {
             double max_val = - std::numeric_limits<double>::max();
@@ -151,6 +166,7 @@ namespace zipHMM {
             }
             posterior_path.push_back(unsigned(max_state));
         }
+        std::cout << "posterior_path.size(): " << posterior_path.size() << std::endl;
 
         delete [] sub_forward_table;
         delete [] sub_backward_table;
@@ -159,13 +175,17 @@ namespace zipHMM {
     void HMMSuite::deduct_subsequence(const std::vector<unsigned> &comp_seq,
                                       std::vector<unsigned> &orig_subseq,
                                       size_t i, size_t j) const {
+        std::cout << "Deducting subsequence from index " << i << " to " << j << std::endl;
         assert(j <= comp_seq.size());
         assert(i < j);
+
+        // Push the compressed subsequence to be decompressed to a stack.
         std::stack<unsigned> seq_stack;
-        for (std::vector<unsigned>::const_reverse_iterator seq_it = comp_seq.rbegin() + comp_seq.size() - j; seq_it != comp_seq.rbegin() + comp_seq.size() - i; ++seq_it) {
+        for (std::vector<unsigned>::const_reverse_iterator seq_it = comp_seq.rbegin() + comp_seq.size() - j - 1; seq_it != comp_seq.rbegin() + comp_seq.size() - i; ++seq_it) {
             seq_stack.push(*seq_it);
         }
 
+        orig_subseq.resize(0);
         while (!seq_stack.empty()) {
             const unsigned c = seq_stack.top();
             seq_stack.pop();
