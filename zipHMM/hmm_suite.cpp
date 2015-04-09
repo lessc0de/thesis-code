@@ -155,7 +155,7 @@ namespace zipHMM {
 
         // Compute posterior decoding
         posterior_path.resize(0);
-        for(size_t c = i - orig_i; c < sub_seq.size(); ++c) {
+        for(size_t c = i - orig_i; c < sub_seq.size() - (orig_j - j); ++c) {
             double max_val = - std::numeric_limits<double>::max();
             size_t max_state = 0;
             for(size_t r = 0; r < no_states; ++r) {
