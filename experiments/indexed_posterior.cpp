@@ -72,13 +72,13 @@ int main(int argc, char **argv) {
 
         // f.indexed_posterior_decoding(pi, A, B, 0, f.get_orig_seq_length(), zip_pd_path);
 
-        f.indexed_posterior_decoding(pi, A, B, 10, 15, zip_pd_path);
-        zip_pd_path.insert(zip_pd_path.begin(), ref_pd_path.begin(), ref_pd_path.begin() + 10);
+        // f.indexed_posterior_decoding(pi, A, B, 10, 15, zip_pd_path);
+        // zip_pd_path.insert(zip_pd_path.begin(), ref_pd_path.begin(), ref_pd_path.begin() + 10);
         // zip_pd_path.insert(zip_pd_path.end(), ref_pd_path.begin() + 15, ref_pd_path.end());
 
-        // f.indexed_posterior_decoding(pi, A, B, 6, 10, zip_pd_path);
-        // zip_pd_path.insert(zip_pd_path.begin(), ref_pd_path.begin(), ref_pd_path.begin() + 6);
-        // zip_pd_path.insert(zip_pd_path.end(), ref_pd_path.begin() + 11, ref_pd_path.end());
+        f.indexed_posterior_decoding(pi, A, B, 6, 10, zip_pd_path);
+        zip_pd_path.insert(zip_pd_path.begin(), ref_pd_path.begin(), ref_pd_path.begin() + 6);
+        zip_pd_path.insert(zip_pd_path.end(), ref_pd_path.begin() + 10, ref_pd_path.end());
     }
 
     if (ref_pd_path != zip_pd_path) {

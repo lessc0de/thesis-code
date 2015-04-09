@@ -94,12 +94,13 @@ namespace zipHMM {
         size_t comp_i;
         size_t comp_j;
         if (comp_i_it->second != 0) {
-            // --comp_i_it;
             orig_i = comp_i_it->first;
         } else {
             orig_i = 0;
         }
-        comp_i = comp_i_it->second + 1;
+        if (i != 0) {
+            comp_i = comp_i_it->second + 1;
+        }
         orig_j = comp_j_it->first;
         comp_j = comp_j_it->second + 1;
 
@@ -140,7 +141,7 @@ namespace zipHMM {
         if (orig_i == 0) {
             Matrix::copy(pi, start_vector);
         } else {
-            Matrix::copy(forward_table[comp_i], start_vector);
+            Matrix::copy(forward_table[comp_i - 1], start_vector);
             // orig_i -= 1;
         }
 
@@ -181,7 +182,7 @@ namespace zipHMM {
 
         // Push the compressed subsequence to be decompressed to a stack.
         std::stack<unsigned> seq_stack;
-        for (std::vector<unsigned>::const_reverse_iterator seq_it = comp_seq.rbegin() + comp_seq.size() - j - 1; seq_it != comp_seq.rbegin() + comp_seq.size() - i; ++seq_it) {
+        for (std::vector<unsigned>::const_reverse_iterator seq_it = comp_seq.rbegin() + comp_seq.size() - j; seq_it != comp_seq.rbegin() + comp_seq.size() - i; ++seq_it) {
             seq_stack.push(*seq_it);
         }
 
