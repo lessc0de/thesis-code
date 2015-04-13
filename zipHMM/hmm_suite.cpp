@@ -31,6 +31,7 @@ namespace zipHMM {
 
     void HMMSuite::indexed_posterior_decoding(const Matrix &pi, const Matrix &A, const Matrix &B, size_t i, size_t j,
                                               std::vector<unsigned> &posterior_path) const {
+        // Check that matrix dimensions agree.
         if(pi.get_width() != 1 || pi.get_height() != A.get_width() || A.get_height() != A.get_width() ||
            B.get_height() != A.get_width() || B.get_width() != orig_alphabet_size) {
             std::cerr << "Dimensions of input matrices do not match:" << std::endl;
@@ -42,10 +43,12 @@ namespace zipHMM {
             std::cerr << "\t" << "B height: "  << B.get_height()  << std::endl;
             std::exit(-1);
         }
+        // Check that the interval is valid.
         if(i > j) {
             std::cerr << "Invalid interval: [" << i << ", " << j << ")" << std::endl;
             std::exit(-2);
         }
+        // If the interval is empty, return the empty path.
         if(i == j) {
             posterior_path.resize(0);
             return;
@@ -65,12 +68,12 @@ namespace zipHMM {
 
         // find alphabet and seqs for given number of states
         size_t no_states = A.get_width();
-        size_t alphabet_size = 0;
+        size_t alphabet_size = get_alphabet_size(no_states);
+
         std::vector<std::vector< unsigned> > sequences;
         for(std::map<size_t, std::vector<std::vector<unsigned> > >::const_iterator it = nStates2seqs.begin(); it != nStates2seqs.end(); ++it) {
             if(it->first >= no_states) {
                 sequences = it->second;
-                alphabet_size = nStates2alphabet_size.find(it->first)->second;
                 break;
             }
         }
@@ -87,11 +90,10 @@ namespace zipHMM {
         }
         for(size_t i = orig_alphabet_size; i < alphabet_size; ++i) {
             std::pair<size_t, size_t> p = get_pair(i);
-            // std::cout << i << ": " << p.first << " " << p.second << std::endl;
             symbol2length[i] = symbol2length[p.first] + symbol2length[p.second];
         }
 
-        // Compute a mapping from original sequence indexes to each new index.
+        // Compute a mapping from original sequence indexes to each new indexes.
         std::map<size_t, size_t> orig_index2new_index;
         std::vector<unsigned> sequence = sequences[0];
         size_t orig_index = 0;
@@ -102,44 +104,23 @@ namespace zipHMM {
 
         // Compute the start and end intervals for which to recompute the
         // forward table.
-        // std::cout << "orig_index2new_index:" << std::endl;
-        // for(std::map<size_t, size_t>::const_iterator it = orig_index2new_index.begin(); it != orig_index2new_index.end(); ++it) {
-        //     std::cout << "  " << it->first << " -> " << it->second << std::endl;
-        // }
         std::map<size_t, size_t>::const_iterator comp_i_it = orig_index2new_index.lower_bound(i + 1);
         std::map<size_t, size_t>::const_iterator comp_j_it = orig_index2new_index.lower_bound(j);
         --comp_i_it;
 
-        int orig_i;
+        size_t orig_i;
         size_t orig_j;
         size_t comp_i;
         size_t comp_j;
-        // if (comp_i_it->second != 0) {
         orig_i = comp_i_it->first;
-        // } else {
-        //     orig_i = 0;
-        // }
         comp_i = comp_i_it->second;
         orig_j = comp_j_it->first;
         comp_j = comp_j_it->second;
-
-        // std::cout << "i: " << i << std::endl;
-        // std::cout << "j: " << j << std::endl;
-        // std::cout << "orig_i: " << orig_i << std::endl;
-        // std::cout << "orig_j: " << orig_j << std::endl;
-        // std::cout << "comp_i: " << comp_i << std::endl;
-        // std::cout << "comp_j: " << comp_j << std::endl;
 
         // Compute the substring of the sequence for which to compute the
         // forward table.
         std::vector<unsigned> sub_seq;
         deduct_subsequence(sequence, sub_seq, comp_i, comp_j);
-
-        // std::cout << "sub_seq: ";
-        // for (std::vector<unsigned>::const_iterator it = sub_seq.begin(); it != sub_seq.end(); ++it) {
-        //     std::cout << *it << " ";
-        // }
-        // std::cout << std::endl;
 
         // Compute forward and backward tables for subsequence.
         double *symbol2scale = new double[alphabet_size];
@@ -169,21 +150,17 @@ namespace zipHMM {
         // Compute posterior decoding
         posterior_path.resize(0);
         for(size_t c = i - orig_i; c < sub_seq.size() - (orig_j - j); ++c) {
-            // std::cout << "Finding state for symbol " << sub_seq[c] << ": ";
             double max_val = - std::numeric_limits<double>::max();
             size_t max_state = 0;
             for(size_t r = 0; r < no_states; ++r) {
                 double val = sub_forward_table[c](r, 0) * sub_backward_table[c](r, 0);
-                // std::cout << val << " ";
                 if (val > max_val) {
                     max_val = val;
                     max_state = r;
                 }
             }
-            // std::cout << std::endl;
             posterior_path.push_back(unsigned(max_state));
         }
-        // std::cout << "posterior_path.size(): " << posterior_path.size() << std::endl;
 
         delete [] sub_forward_table;
         delete [] sub_backward_table;
