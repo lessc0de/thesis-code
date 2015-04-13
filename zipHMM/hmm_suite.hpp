@@ -150,6 +150,8 @@ namespace zipHMM {
 
         double viterbi_helper(const Matrix &pi, const Matrix &A, const Matrix &B,
                               const bool compute_path, const bool memory_save, std::vector<unsigned> &viterbi_path) const;
+
+        size_t number_of_sequences(size_t no_states) const;
     };
 
 }

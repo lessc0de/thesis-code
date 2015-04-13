@@ -29,6 +29,20 @@
 
 namespace zipHMM {
 
+    size_t HMMSuite::number_of_sequences(size_t no_states) const {
+        std::vector<std::vector< unsigned> > sequences;
+        for(std::map<size_t, std::vector<std::vector<unsigned> > >::const_iterator it = nStates2seqs.begin(); it != nStates2seqs.end(); ++it) {
+            if(it->first >= no_states) {
+                sequences = it->second;
+                break;
+            }
+        }
+        if(sequences.empty()) {
+            sequences = nStates2seqs.rbegin()->second;
+        }
+        return sequences.size();
+    }
+
     void HMMSuite::indexed_posterior_decoding(const Matrix &pi, const Matrix &A, const Matrix &B, size_t i, size_t j,
                                               std::vector<unsigned> &posterior_path) const {
         // Check that matrix dimensions agree.
@@ -41,6 +55,11 @@ namespace zipHMM {
             std::cerr << "\t" << "A height: "  << A.get_height()  << std::endl;
             std::cerr << "\t" << "B width:  "  << B.get_width()   << std::endl;
             std::cerr << "\t" << "B height: "  << B.get_height()  << std::endl;
+            std::exit(-1);
+        }
+        // Check that only a single sequence has been loaded.
+        if(number_of_sequences(A.get_height()) != 1) {
+            std::cerr << "Computing the posterior decoding only works if only a single sequence has been loaded." << std::endl;
             std::exit(-1);
         }
         // Check that the interval is valid.
@@ -198,9 +217,15 @@ namespace zipHMM {
 
     void HMMSuite::posterior_decoding(const Matrix &pi, const Matrix &A, const Matrix &B,
                                       std::vector<unsigned> &posterior_path) const {
+        if(get_nStates2seqs().size() != 1) {
+            std::cerr << "Computing the posterior decoding only works if only a single sequence has been loaded." << std::endl;
+            std::exit(-1);
+        }
+
         if (get_alphabet_size(A.get_height()) != get_orig_alphabet_size()) {
             std::cerr << "Sequence has been compressed. You will get the posterior decoding of the compressed sequence." << std::endl;
         }
+
         size_t length = get_seq_length(A.get_height());
         std::vector<double> scales;
 
@@ -429,11 +454,19 @@ namespace zipHMM {
 
     double HMMSuite::viterbi(const Matrix &pi, const Matrix &A, const Matrix &B,
                             std::vector<unsigned> &viterbi_path) const {
+        if(get_nStates2seqs().size() != 1) {
+            std::cerr << "Computing the Viterbi path only works if only a single sequence has been loaded." << std::endl;
+            std::exit(-1);
+        }
         return HMMSuite::viterbi_helper(pi, A, B, true, false, viterbi_path);
     }
 
     double HMMSuite::viterbi(const Matrix &pi, const Matrix &A, const Matrix &B,
                              const bool memory_save, std::vector<unsigned> &viterbi_path) const {
+        if(get_nStates2seqs().size() != 1) {
+            std::cerr << "Computing the Viterbi path only works if only a single sequence has been loaded." << std::endl;
+            std::exit(-1);
+        }
         return HMMSuite::viterbi_helper(pi, A, B, true, memory_save, viterbi_path);
     }
 
@@ -478,6 +511,11 @@ namespace zipHMM {
             std::cerr << "\t" << "B height: "  << B.get_height()  << std::endl;
             std::exit(-1);
         }
+        if(get_nStates2seqs().size() != 1) {
+            std::cerr << "Computing the scales vector and the backward table only works if only a single sequence has been loaded." << std::endl;
+            std::exit(-1);
+        }
+
 
         // find alphabet and seqs for given number of states
         size_t no_states = A.get_width();
@@ -596,11 +634,19 @@ namespace zipHMM {
     }
 
     double HMMSuite::forward(const Matrix &pi, const Matrix &A, const Matrix &B, std::vector<double> &scales) const {
+        if(get_nStates2seqs().size() != 1) {
+            std::cerr << "Computing the scales vector only works if only a single sequence has been loaded." << std::endl;
+            std::exit(-1);
+        }
         Matrix *forward_table;
         return HMMSuite::forward_helper(pi, A, B, scales, false, forward_table);
     }
 
     double HMMSuite::forward(const Matrix &pi, const Matrix &A, const Matrix &B, std::vector<double> &scales, Matrix *forward_table) const {
+        if(get_nStates2seqs().size() != 1) {
+            std::cerr << "Computing the scales vector and the forward table only works if only a single sequence has been loaded." << std::endl;
+            std::exit(-1);
+        }
         return HMMSuite::forward_helper(pi, A, B, scales, true, forward_table);
     }
 
@@ -1097,6 +1143,8 @@ namespace zipHMM {
             /* could not open directory */
             perror ("could not open directory");
         }
+
+        std::cout << "Read " << sequences.size() << " sequences." << std::endl;
 
         init_data_structure(sequences, alphabet_size, nStatesSave, min_no_eval);
     }
