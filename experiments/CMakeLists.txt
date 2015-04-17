@@ -15,6 +15,9 @@ target_link_libraries(bench_viterbi zipHMM)
 add_executable(bench_posterior bench_posterior.cpp)
 target_link_libraries(bench_posterior zipHMM)
 
+add_executable(bench_indexed_posterior bench_indexed_posterior.cpp)
+target_link_libraries(bench_indexed_posterior zipHMM)
+
 add_executable(backward backward.cpp)
 target_link_libraries(backward zipHMM)
 
