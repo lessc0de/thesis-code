@@ -35,6 +35,7 @@
 #include <cstdlib>
 #include <cmath>
 #include <ctime>
+#include <sys/time.h>
 
 #ifdef WITH_OMP
 #include<omp.h>
@@ -72,7 +73,9 @@ int main(int argc, char **argv) {
         int min_num_of_evals = 500;
         f.read_seq(seq_filename, alphabet_size, min_num_of_evals);
 
-        std::srand(std::time(0));
+        struct timeval tv;
+        gettimeofday(&tv, NULL);
+        std::srand(tv.tv_sec * 1000000 + tv.tv_usec);
         int i = std::rand() % f.get_orig_seq_length();
         int j = std::rand() % f.get_orig_seq_length();
 
@@ -82,6 +85,8 @@ int main(int argc, char **argv) {
             j = tmp;
         }
         assert(i <= j);
+
+        std::cout << i << ", " << j << std::endl;
 
         f.indexed_posterior_decoding(pi, A, B, i, j, zip_pd_path);
         zip_pd_path.insert(zip_pd_path.begin(), ref_pd_path.begin(), ref_pd_path.begin() + i);
@@ -103,11 +108,11 @@ int main(int argc, char **argv) {
         exit(1);
     } else {
         std::cout << "Paths identical!" << std::endl;
-        for (size_t i = 0; i < 10; ++i) {
+        for (size_t i = 0; i < 10 && i < ref_pd_path.size(); ++i) {
             std::cout << ref_pd_path[i] << " ";
         }
         std::cout << "..." << std::endl;
-        for (size_t i = 0; i < 10; ++i) {
+        for (size_t i = 0; i < 10 && i < ref_pd_path.size(); ++i) {
             std::cout << zip_pd_path[i] << " ";
         }
         std::cout << "..." << std::endl;
