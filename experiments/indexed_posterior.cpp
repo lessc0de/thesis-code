@@ -93,7 +93,7 @@ int main(int argc, char **argv) {
         zip_pd_path.insert(zip_pd_path.end(), ref_pd_path.begin() + j, ref_pd_path.end());
     }
 
-    if (ref_pd_path.size() != zip_pd_path.size()) {
+    if (ref_pd_path != zip_pd_path) {
         std::cout << "Paths not identical!" << std::endl;
         std::cout << "Length: " << ref_pd_path.size() << "  ";
         for (size_t i = 0; i < 20 && i < ref_pd_path.size(); ++i) {
