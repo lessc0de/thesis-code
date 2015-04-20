@@ -127,19 +127,44 @@ namespace zipHMM {
         std::map<size_t, size_t>::const_iterator comp_j_it = orig_index2new_index.lower_bound(j);
         --comp_i_it;
 
+        // std::cout << "Map: " << std::endl;
+        // for (std::map<size_t, size_t>::const_iterator it = orig_index2new_index.begin(); it != orig_index2new_index.end(); ++it) {
+        //     std::cout << "  " << it->first << ": " << it->second << std::endl;
+        // }
+
         size_t orig_i;
         size_t orig_j;
         size_t comp_i;
         size_t comp_j;
         orig_i = comp_i_it->first;
         comp_i = comp_i_it->second;
-        orig_j = comp_j_it->first;
-        comp_j = comp_j_it->second;
+        if (comp_j_it == orig_index2new_index.end()) {
+            comp_j = sequence.size();
+            orig_j = get_orig_seq_length();
+        } else {
+            orig_j = comp_j_it->first;
+            comp_j = comp_j_it->second;
+        }
 
         // Compute the substring of the sequence for which to compute the
         // forward table.
         std::vector<unsigned> sub_seq;
         deduct_subsequence(sequence, sub_seq, comp_i, comp_j);
+
+        // std::cout << "comp_i: " << comp_i << std::endl
+        //           << "comp_j: " << comp_j << std::endl
+        //           << "orig_i: " << orig_i << std::endl
+        //           << "orig_j: " << orig_j << std::endl
+        //           << "i: " << i << std::endl
+        //           << "j: " << j << std::endl
+        //           << "sequence.size(): " << sequence.size() << std::endl
+        //           << "sub_seq.size(): " << sub_seq.size() << std::endl;
+
+        // std::cout << "sub_seq: ";
+        // for(std::vector<unsigned>::const_iterator it = sub_seq.begin(); it != sub_seq.end(); ++it) {
+        //     std::cout << *it << " ";
+        // }
+        // std::cout << std::endl;
 
         // Compute forward and backward tables for subsequence.
         double *symbol2scale = new double[alphabet_size];
@@ -169,6 +194,7 @@ namespace zipHMM {
         // Compute posterior decoding
         posterior_path.resize(0);
         for(size_t c = i - orig_i; c < sub_seq.size() - (orig_j - j); ++c) {
+            // std::cout << "c: " << c << std::endl;
             double max_val = - std::numeric_limits<double>::max();
             size_t max_state = 0;
             for(size_t r = 0; r < no_states; ++r) {
@@ -180,6 +206,7 @@ namespace zipHMM {
             }
             posterior_path.push_back(unsigned(max_state));
         }
+        // std::cout << "posterior_path.size(): " << posterior_path.size() << std::endl;
 
         delete [] sub_forward_table;
         delete [] sub_backward_table;
@@ -189,7 +216,7 @@ namespace zipHMM {
                                       std::vector<unsigned> &orig_subseq,
                                       size_t i, size_t j) const {
         assert(j <= comp_seq.size());
-        assert(i < j);
+        assert(i <= j);
 
         // Push the compressed subsequence to be decompressed to a stack.
         std::stack<unsigned> seq_stack;
