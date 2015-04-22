@@ -578,31 +578,25 @@ namespace zipHMM {
         }
 
         size_t length = sequence.size();
-        Matrix res;
 
         if(backward_table[length - 1].get_height() == 0) {
             // Standard backward algorithm. The last column is set to 1.
-            res.reset(no_states, 1);
+            backward_table[length - 1].reset(no_states, 1);
             for (size_t i = 0; i < no_states; ++i) {
-                res(i, 0) = 1.0;
+                backward_table[length - 1](i, 0) = 1.0;
             }
-            Matrix::copy(res, backward_table[length - 1]);
         } else {
             // The last column has already been computed. Continue from that.
-            Matrix::copy(backward_table[length - 1], res);
         }
 
 
         // multiply matrices across the sequence
         for(int c = length - 2; c >= 0; --c) {
-            Matrix::blas_matrix_vector_mult(symbol2matrix2[sequence[c + 1]], res, backward_table[c]);
-            Matrix::copy(backward_table[c], res);
+            Matrix::blas_matrix_vector_mult(symbol2matrix2[sequence[c + 1]], backward_table[c + 1], backward_table[c]);
 
-            const double scalar = scales[c+1];
+            const double scalar = 1 / scales[c+1];
             for (size_t j = 0; j < no_states; ++j) {
-                // TODO: Compute 1 / scalar and multiply by that instead. Also,
-                // it would be nice if the Matrix class had a scale method.
-                res(j, 0) /= scalar;
+                backward_table[c](j, 0) *= scalar;
             }
         }
     }
