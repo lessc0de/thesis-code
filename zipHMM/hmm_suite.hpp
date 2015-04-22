@@ -27,7 +27,7 @@ namespace zipHMM {
         ~HMMSuite() { }
 
         double forward_seqs(const Matrix &pi, const Matrix &A, const Matrix &B, std::vector<double> &scales) const;
-        double forward_seq(const Matrix &pi, const bool init, const Matrix &A, const Matrix &B,
+        double forward_seq(const Matrix &pi, const Matrix &A, const Matrix &B,
                            const std::vector<unsigned> &sequence, const double *symbol2scale,
                            const Matrix *symbol2matrix, std::vector<double> &scales, bool compute_matrix, Matrix *forward_table) const;
 

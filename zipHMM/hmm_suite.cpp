@@ -157,11 +157,8 @@ namespace zipHMM {
         Matrix *sub_forward_table = new Matrix[sub_seq.size()];
         Matrix *sub_backward_table = new Matrix[sub_seq.size()];
 
-        Matrix start_vector;
-        if (orig_i == 0) {
-            Matrix::copy(pi, start_vector);
-        } else {
-            Matrix::copy(forward_table[comp_i], start_vector);
+        if (orig_i != 0) {
+            Matrix::copy(forward_table[comp_i], sub_forward_table[0]);
         }
 
         Matrix end_vector;
@@ -175,9 +172,9 @@ namespace zipHMM {
         }
 
         if (orig_i == 0){
-            forward_seq(start_vector, true, A, B, sub_seq, symbol2scale, symbol2matrix, sub_scales, true, sub_forward_table);
+            forward_seq(pi, A, B, sub_seq, symbol2scale, symbol2matrix, sub_scales, true, sub_forward_table);
         } else {
-            forward_seq(start_vector, false, A, B, sub_seq, symbol2scale, symbol2matrix, sub_scales, true, sub_forward_table);
+            forward_seq(pi, A, B, sub_seq, symbol2scale, symbol2matrix, sub_scales, true, sub_forward_table);
         }
         backward_seq(pi, A, B, end_vector, sub_seq, sub_scales, symbol2matrix, sub_backward_table);
 
@@ -642,7 +639,7 @@ namespace zipHMM {
         double ll = 0.0;
         for(std::vector<std::vector<unsigned> >::const_iterator it = sequences.begin(); it != sequences.end(); ++it) {
             const std::vector<unsigned> &sequence = (*it);
-            ll += forward_seq(pi, true, A, B, sequence, symbol2scale, symbol2matrix, scales, compute_path, forward_table);
+            ll += forward_seq(pi, A, B, sequence, symbol2scale, symbol2matrix, scales, compute_path, forward_table);
         }
 
         delete[] symbol2scale;
@@ -674,7 +671,7 @@ namespace zipHMM {
         return HMMSuite::forward_helper(pi, A, B, scales, true, forward_table);
     }
 
-    double HMMSuite::forward_seq(const Matrix &pi, const bool init, const Matrix &A, const Matrix &B, const std::vector<unsigned> &sequence, const double *symbol2scale, const Matrix *symbol2matrix, std::vector<double> &scales, bool compute_table, Matrix* forward_table) const {
+    double HMMSuite::forward_seq(const Matrix &pi, const Matrix &A, const Matrix &B, const std::vector<unsigned> &sequence, const double *symbol2scale, const Matrix *symbol2matrix, std::vector<double> &scales, bool compute_table, Matrix* forward_table) const {
         Matrix res;
         Matrix tmp;
         double loglikelihood = 0;
@@ -682,17 +679,20 @@ namespace zipHMM {
 
         std::vector<double> internal_scales;
 
-        // compute C_1 and push corresponding scale
-        if(init) {
+        if(forward_table[0].get_height() == 0) {
+            // Forward table is empty. Compute first column using pi.
+
+            // compute C_1 and push corresponding scale
             internal_scales.push_back( std::log(init_apply_em_prob(res, pi, B, sequence[0])) );
+            if (compute_table) {
+                Matrix::copy(res, forward_table[0]);
+            }
         } else {
-            Matrix::copy(pi, res);
+            // Forward table contains first column.
+            Matrix::copy(forward_table[0], res);
             internal_scales.push_back( std::log(res.normalize()) );
         }
         scales.push_back(internal_scales[0]);
-        if (compute_table) {
-            Matrix::copy(res, forward_table[0]);
-        }
 
         // multiply matrices across the sequence
         for(size_t i = 1; i < sequence.size(); ++i) {
