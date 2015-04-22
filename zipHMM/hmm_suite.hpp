@@ -49,7 +49,7 @@ namespace zipHMM {
         double mr_pthread_forward(const Matrix &pi, const Matrix &A, const Matrix &B,
                                   const std::string &device_filename = DEFAULT_DEVICE_FILENAME) const;
 
-        void backward_seq(const Matrix &pi, const Matrix &A, const Matrix &B, const Matrix &end,
+        void backward_seq(const Matrix &pi, const Matrix &A, const Matrix &B,
                           const std::vector<unsigned> &sequence, const std::vector<double> &scales,
                           const Matrix *symbol2matrix, Matrix *backward_table) const;
 

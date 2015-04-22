@@ -169,6 +169,7 @@ namespace zipHMM {
             }
         } else {
             Matrix::copy(backward_table[comp_j], end_vector);
+            Matrix::copy(end_vector, sub_backward_table[sub_seq.size() - 1]);
         }
 
         if (orig_i == 0){
@@ -176,7 +177,7 @@ namespace zipHMM {
         } else {
             forward_seq(pi, A, B, sub_seq, symbol2scale, symbol2matrix, sub_scales, true, sub_forward_table);
         }
-        backward_seq(pi, A, B, end_vector, sub_seq, sub_scales, symbol2matrix, sub_backward_table);
+        backward_seq(pi, A, B, sub_seq, sub_scales, symbol2matrix, sub_backward_table);
 
         delete [] symbol2scale;
         delete [] symbol2matrix;
@@ -557,15 +558,9 @@ namespace zipHMM {
 
         forward_compute_symbol2scale_and_symbol2matrix(symbol2matrix, symbol2scale, A, B, alphabet_size);
 
-        Matrix ones;
-        ones.reset(A.get_width(), 1);
-        for (size_t i = 0; i < ones.get_height(); ++i) {
-            ones(i, 0) = 1.0;
-        }
-
         for(std::vector<std::vector<unsigned> >::const_iterator it = sequences.begin(); it != sequences.end(); ++it) {
             const std::vector<unsigned> &sequence = (*it);
-            backward_seq(pi, A, B, ones, sequence, scales, symbol2matrix, backward_table);
+            backward_seq(pi, A, B, sequence, scales, symbol2matrix, backward_table);
         }
 
         delete[] symbol2scale;
@@ -573,7 +568,7 @@ namespace zipHMM {
     }
 
 
-    void HMMSuite::backward_seq(const Matrix &pi, const Matrix &A, const Matrix &B, const Matrix &end, const std::vector<unsigned> &sequence, const std::vector<double> &scales, const Matrix *symbol2matrix, Matrix *backward_table) const {
+    void HMMSuite::backward_seq(const Matrix &pi, const Matrix &A, const Matrix &B, const std::vector<unsigned> &sequence, const std::vector<double> &scales, const Matrix *symbol2matrix, Matrix *backward_table) const {
         size_t no_states = A.get_height();
 
         // Transpose matrices to make matrix multiplications more efficient.
@@ -583,10 +578,20 @@ namespace zipHMM {
         }
 
         size_t length = sequence.size();
-
         Matrix res;
-        Matrix::copy(end, res);
-        Matrix::copy(res, backward_table[length - 1]);
+
+        if(backward_table[length - 1].get_height() == 0) {
+            // Standard backward algorithm. The last column is set to 1.
+            res.reset(no_states, 1);
+            for (size_t i = 0; i < no_states; ++i) {
+                res(i, 0) = 1.0;
+            }
+            Matrix::copy(res, backward_table[length - 1]);
+        } else {
+            // The last column has already been computed. Continue from that.
+            Matrix::copy(backward_table[length - 1], res);
+        }
+
 
         // multiply matrices across the sequence
         for(int c = length - 2; c >= 0; --c) {
