@@ -112,25 +112,30 @@ namespace zipHMM {
             symbol2length[i] = symbol2length[p.first] + symbol2length[p.second];
         }
 
+        // std::cout << "symbol2length: " << std::endl;
+        // for (std::map<size_t, size_t>::const_iterator it = symbol2length.begin(); it != symbol2length.end(); ++it) {
+        //     std::cout << "  " << it->first << ": " << it->second << std::endl;
+        // }
+
         // Compute a mapping from original sequence indexes to each new indexes.
         std::map<size_t, size_t> orig_index2new_index;
         std::vector<unsigned> sequence = sequences[0];
-        size_t orig_index = 0;
+        int orig_index = - (int) symbol2length[*sequence.begin()];
         for(std::vector<unsigned>::const_iterator it = sequence.begin(); it != sequence.end(); ++it) {
-            orig_index2new_index[orig_index] = it - sequence.begin();
             orig_index += symbol2length[*it];
+            orig_index2new_index[orig_index] = it - sequence.begin();
         }
+
+        // std::cout << "Map: " << std::endl;
+        // for (std::map<size_t, size_t>::const_iterator it = orig_index2new_index.begin(); it != orig_index2new_index.end(); ++it) {
+        //     std::cout << "  " << it->first << ": " << it->second << std::endl;
+        // }
 
         // Compute the start and end intervals for which to recompute the
         // forward table.
         std::map<size_t, size_t>::const_iterator comp_i_it = orig_index2new_index.lower_bound(i + 1);
         std::map<size_t, size_t>::const_iterator comp_j_it = orig_index2new_index.lower_bound(j);
         --comp_i_it;
-
-        // std::cout << "Map: " << std::endl;
-        // for (std::map<size_t, size_t>::const_iterator it = orig_index2new_index.begin(); it != orig_index2new_index.end(); ++it) {
-        //     std::cout << "  " << it->first << ": " << it->second << std::endl;
-        // }
 
         size_t orig_i;
         size_t orig_j;
@@ -150,6 +155,7 @@ namespace zipHMM {
         // forward table.
         std::vector<unsigned> sub_seq;
         deduct_subsequence(sequence, sub_seq, comp_i, comp_j);
+        sub_seq.insert(sub_seq.begin(), sequence[comp_i]);
 
         // std::cout << "comp_i: " << comp_i << std::endl
         //           << "comp_j: " << comp_j << std::endl
@@ -166,11 +172,26 @@ namespace zipHMM {
         // }
         // std::cout << std::endl;
 
+        // std::cout << "sequence: ";
+        // for(std::vector<unsigned>::const_iterator it = sequence.begin(); it != sequence.end(); ++it) {
+        //     std::cout << *it << " ";
+        // }
+        // std::cout << std::endl;
+
         // Compute forward and backward tables for subsequence.
         double *symbol2scale = new double[alphabet_size];
         Matrix *symbol2matrix = new Matrix[alphabet_size];
 
         forward_compute_symbol2scale_and_symbol2matrix(symbol2matrix, symbol2scale, A, B, alphabet_size);
+
+        // std::cout << "symbol2matrix:" << std::endl;
+        // for(size_t i = 0; i < alphabet_size; ++i) {
+        //     std::cout << i << ":" << std::endl;
+        //     std::cout << symbol2matrix[i] << std::endl;
+        // }
+        // std::cout << "pi:" << std::endl;
+        // std::cout << pi << std::endl;
+
 
         std::vector<double> sub_scales;
         Matrix *sub_forward_table = new Matrix[sub_seq.size()];
@@ -180,11 +201,38 @@ namespace zipHMM {
         if (orig_i == 0) {
             Matrix::copy(pi, start_vector);
         } else {
-            Matrix::copy(forward_table[comp_i - 1], start_vector);
+            Matrix::copy(forward_table[comp_i], start_vector);
         }
 
-        forward_seq(start_vector, A, B, sub_seq, symbol2scale, symbol2matrix, sub_scales, true, sub_forward_table);
-        backward_seq(pi, A, B, backward_table[comp_j - 1], sub_seq, sub_scales, symbol2matrix, sub_backward_table);
+        Matrix end_vector;
+        if (comp_j == sequence.size() - 1) {
+            end_vector.reset(A.get_width(), 1);
+            for (size_t i = 0; i < end_vector.get_height(); ++i) {
+                end_vector(i, 0) = 1.0;
+            }
+        } else {
+            Matrix::copy(backward_table[comp_j], end_vector);
+        }
+
+        // std::cout << "Backward table:" << std::endl;
+        // for(size_t i = 0; i < sequence.size(); ++i) {
+        //     std::cout << backward_table[i] << std::endl;
+        // }
+
+        if (orig_i == 0){
+            forward_seq(start_vector, true, A, B, sub_seq, symbol2scale, symbol2matrix, sub_scales, true, sub_forward_table);
+        } else {
+            forward_seq(start_vector, false, A, B, sub_seq, symbol2scale, symbol2matrix, sub_scales, true, sub_forward_table);
+        }
+        backward_seq(pi, A, B, end_vector, sub_seq, sub_scales, symbol2matrix, sub_backward_table);
+
+        // std::cout << "Start vector" << std::endl;
+        // std::cout << start_vector << std::endl;
+
+        // std::cout << "Sub Backward table:" << std::endl;
+        // for(size_t i = 0; i < sub_seq.size(); ++i) {
+        //     std::cout << sub_backward_table[i] << std::endl;
+        // }
 
         delete [] symbol2scale;
         delete [] symbol2matrix;
@@ -193,7 +241,7 @@ namespace zipHMM {
 
         // Compute posterior decoding
         posterior_path.resize(0);
-        for(size_t c = i - orig_i; c < sub_seq.size() - (orig_j - j); ++c) {
+        for(size_t c = i - orig_i; c < sub_seq.size() - (orig_j - j) - 1; ++c) {
             // std::cout << "c: " << c << std::endl;
             double max_val = - std::numeric_limits<double>::max();
             size_t max_state = 0;
@@ -220,8 +268,9 @@ namespace zipHMM {
 
         // Push the compressed subsequence to be decompressed to a stack.
         std::stack<unsigned> seq_stack;
-        for (std::vector<unsigned>::const_reverse_iterator seq_it = comp_seq.rbegin() + comp_seq.size() - j; seq_it != comp_seq.rbegin() + comp_seq.size() - i; ++seq_it) {
+        for (std::vector<unsigned>::const_reverse_iterator seq_it = comp_seq.rbegin() + comp_seq.size() - j - 1; seq_it != comp_seq.rbegin() + comp_seq.size() - i - 1; ++seq_it) {
             seq_stack.push(*seq_it);
+            // std::cout << "pushing " << *seq_it << " to stack." << std::endl;
         }
 
         orig_subseq.resize(0);
@@ -603,6 +652,8 @@ namespace zipHMM {
 
             const double scalar = scales[c+1];
             for (size_t j = 0; j < no_states; ++j) {
+                // TODO: Compute 1 / scalar and multiply by that instead. Also,
+                // it would be nice if the Matrix class had a scale method.
                 res(j, 0) /= scalar;
             }
         }
@@ -645,7 +696,7 @@ namespace zipHMM {
         double ll = 0.0;
         for(std::vector<std::vector<unsigned> >::const_iterator it = sequences.begin(); it != sequences.end(); ++it) {
             const std::vector<unsigned> &sequence = (*it);
-            ll += forward_seq(pi, A, B, sequence, symbol2scale, symbol2matrix, scales, compute_path, forward_table);
+            ll += forward_seq(pi, true, A, B, sequence, symbol2scale, symbol2matrix, scales, compute_path, forward_table);
         }
 
         delete[] symbol2scale;
@@ -677,7 +728,7 @@ namespace zipHMM {
         return HMMSuite::forward_helper(pi, A, B, scales, true, forward_table);
     }
 
-    double HMMSuite::forward_seq(const Matrix &pi, const Matrix &A, const Matrix &B, const std::vector<unsigned> &sequence, const double *symbol2scale, const Matrix *symbol2matrix, std::vector<double> &scales, bool compute_table, Matrix* forward_table) const {
+    double HMMSuite::forward_seq(const Matrix &pi, const bool init, const Matrix &A, const Matrix &B, const std::vector<unsigned> &sequence, const double *symbol2scale, const Matrix *symbol2matrix, std::vector<double> &scales, bool compute_table, Matrix* forward_table) const {
         Matrix res;
         Matrix tmp;
         double loglikelihood = 0;
@@ -686,7 +737,12 @@ namespace zipHMM {
         std::vector<double> internal_scales;
 
         // compute C_1 and push corresponding scale
-        internal_scales.push_back( std::log(init_apply_em_prob(res, pi, B, sequence[0])) );
+        if(init) {
+            internal_scales.push_back( std::log(init_apply_em_prob(res, pi, B, sequence[0])) );
+        } else {
+            Matrix::copy(pi, res);
+            internal_scales.push_back( std::log(res.normalize()) );
+        }
         scales.push_back(internal_scales[0]);
         if (compute_table) {
             Matrix::copy(res, forward_table[0]);
@@ -697,11 +753,11 @@ namespace zipHMM {
             Matrix::blas_matrix_vector_mult(symbol2matrix[sequence[i]], res, tmp);
             Matrix::copy(tmp, res);
 
+            double res_normalized = res.normalize();
             if (compute_table) {
                 Matrix::copy(res, forward_table[i]);
             }
 
-            double res_normalized = res.normalize();
             internal_scales.push_back(std::log(res_normalized)  + symbol2scale[sequence[i]] );
             scales.push_back(res_normalized);
         }
@@ -710,7 +766,6 @@ namespace zipHMM {
         for(std::vector<double>::iterator it = internal_scales.begin(); it != internal_scales.end(); ++it) {
             loglikelihood += (*it);
         }
-
         return loglikelihood;
     }
 
