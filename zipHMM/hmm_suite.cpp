@@ -655,7 +655,7 @@ namespace zipHMM {
 
     double HMMSuite::forward(const Matrix &pi, const Matrix &A, const Matrix &B) const {
         std::vector<double> scales;
-        Matrix *forward_table;
+        Matrix *forward_table = NULL;
         return HMMSuite::forward_helper(pi, A, B, scales, false, forward_table);
     }
 
@@ -664,7 +664,7 @@ namespace zipHMM {
             std::cerr << "Computing the scales vector only works if only a single sequence has been loaded." << std::endl;
             std::exit(-1);
         }
-        Matrix *forward_table;
+        Matrix *forward_table = NULL;
         return HMMSuite::forward_helper(pi, A, B, scales, false, forward_table);
     }
 
@@ -684,7 +684,7 @@ namespace zipHMM {
 
         std::vector<double> internal_scales;
 
-        if(forward_table[0].get_height() == 0) {
+        if(forward_table == NULL || forward_table[0].get_height() == 0) {
             // Forward table is empty. Compute first column using pi.
 
             // compute C_1 and push corresponding scale
