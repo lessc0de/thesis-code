@@ -112,11 +112,6 @@ namespace zipHMM {
             symbol2length[i] = symbol2length[p.first] + symbol2length[p.second];
         }
 
-        // std::cout << "symbol2length: " << std::endl;
-        // for (std::map<size_t, size_t>::const_iterator it = symbol2length.begin(); it != symbol2length.end(); ++it) {
-        //     std::cout << "  " << it->first << ": " << it->second << std::endl;
-        // }
-
         // Compute a mapping from original sequence indexes to each new indexes.
         std::map<size_t, size_t> orig_index2new_index;
         std::vector<unsigned> sequence = sequences[0];
@@ -125,11 +120,6 @@ namespace zipHMM {
             orig_index += symbol2length[*it];
             orig_index2new_index[orig_index] = it - sequence.begin();
         }
-
-        // std::cout << "Map: " << std::endl;
-        // for (std::map<size_t, size_t>::const_iterator it = orig_index2new_index.begin(); it != orig_index2new_index.end(); ++it) {
-        //     std::cout << "  " << it->first << ": " << it->second << std::endl;
-        // }
 
         // Compute the start and end intervals for which to recompute the
         // forward table.
@@ -157,41 +147,11 @@ namespace zipHMM {
         deduct_subsequence(sequence, sub_seq, comp_i, comp_j);
         sub_seq.insert(sub_seq.begin(), sequence[comp_i]);
 
-        // std::cout << "comp_i: " << comp_i << std::endl
-        //           << "comp_j: " << comp_j << std::endl
-        //           << "orig_i: " << orig_i << std::endl
-        //           << "orig_j: " << orig_j << std::endl
-        //           << "i: " << i << std::endl
-        //           << "j: " << j << std::endl
-        //           << "sequence.size(): " << sequence.size() << std::endl
-        //           << "sub_seq.size(): " << sub_seq.size() << std::endl;
-
-        // std::cout << "sub_seq: ";
-        // for(std::vector<unsigned>::const_iterator it = sub_seq.begin(); it != sub_seq.end(); ++it) {
-        //     std::cout << *it << " ";
-        // }
-        // std::cout << std::endl;
-
-        // std::cout << "sequence: ";
-        // for(std::vector<unsigned>::const_iterator it = sequence.begin(); it != sequence.end(); ++it) {
-        //     std::cout << *it << " ";
-        // }
-        // std::cout << std::endl;
-
         // Compute forward and backward tables for subsequence.
         double *symbol2scale = new double[alphabet_size];
         Matrix *symbol2matrix = new Matrix[alphabet_size];
 
         forward_compute_symbol2scale_and_symbol2matrix(symbol2matrix, symbol2scale, A, B, alphabet_size);
-
-        // std::cout << "symbol2matrix:" << std::endl;
-        // for(size_t i = 0; i < alphabet_size; ++i) {
-        //     std::cout << i << ":" << std::endl;
-        //     std::cout << symbol2matrix[i] << std::endl;
-        // }
-        // std::cout << "pi:" << std::endl;
-        // std::cout << pi << std::endl;
-
 
         std::vector<double> sub_scales;
         Matrix *sub_forward_table = new Matrix[sub_seq.size()];
@@ -206,18 +166,13 @@ namespace zipHMM {
 
         Matrix end_vector;
         if (comp_j == sequence.size() - 1) {
-            end_vector.reset(A.get_width(), 1);
-            for (size_t i = 0; i < end_vector.get_height(); ++i) {
+            end_vector.reset(no_states, 1);
+            for (size_t i = 0; i < no_states; ++i) {
                 end_vector(i, 0) = 1.0;
             }
         } else {
             Matrix::copy(backward_table[comp_j], end_vector);
         }
-
-        // std::cout << "Backward table:" << std::endl;
-        // for(size_t i = 0; i < sequence.size(); ++i) {
-        //     std::cout << backward_table[i] << std::endl;
-        // }
 
         if (orig_i == 0){
             forward_seq(start_vector, true, A, B, sub_seq, symbol2scale, symbol2matrix, sub_scales, true, sub_forward_table);
@@ -225,14 +180,6 @@ namespace zipHMM {
             forward_seq(start_vector, false, A, B, sub_seq, symbol2scale, symbol2matrix, sub_scales, true, sub_forward_table);
         }
         backward_seq(pi, A, B, end_vector, sub_seq, sub_scales, symbol2matrix, sub_backward_table);
-
-        // std::cout << "Start vector" << std::endl;
-        // std::cout << start_vector << std::endl;
-
-        // std::cout << "Sub Backward table:" << std::endl;
-        // for(size_t i = 0; i < sub_seq.size(); ++i) {
-        //     std::cout << sub_backward_table[i] << std::endl;
-        // }
 
         delete [] symbol2scale;
         delete [] symbol2matrix;
@@ -254,7 +201,6 @@ namespace zipHMM {
             }
             posterior_path.push_back(unsigned(max_state));
         }
-        // std::cout << "posterior_path.size(): " << posterior_path.size() << std::endl;
 
         delete [] sub_forward_table;
         delete [] sub_backward_table;
