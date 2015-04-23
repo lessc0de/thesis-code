@@ -73,58 +73,74 @@ int main(int argc, char **argv) {
     zipHMM::read_HMM(pi, A, B, hmm_filename);
 
     // Run experiment.
-    zipHMM::Timer simple_timer;
-    zipHMM::Timer one_timer;
-    zipHMM::Timer many_timer;
+    zipHMM::Timer simple_pre_timer;
+    zipHMM::Timer one_pre_timer;
+    zipHMM::Timer many_pre_timer;
+
+    zipHMM::Timer simple_running_timer;
+    zipHMM::Timer one_running_timer;
+    zipHMM::Timer many_running_timer;
 
     // Simple
     {
-        simple_timer.start();
+        simple_pre_timer.start();
         zipHMM::Matrix pd_table;
         std::vector<double> scales;
         std::vector<unsigned> pd_path;
+        simple_pre_timer.stop();
+
+        simple_running_timer.start();
         zipHMM::posterior_decoding(sequence_filename, pi, A, B, pd_path, pd_table);
         std::vector<unsigned> subseq_path;
         subseq_path.insert(subseq_path.begin(), pd_path.begin() + i, pd_path.begin() + j);
-        simple_timer.stop();
+        simple_running_timer.stop();
     }
 
     // One
     {
-        one_timer.start();
+        one_pre_timer.start();
 
         zipHMM::HMMSuite f;
         size_t alphabet_size = 4;
         size_t min_num_of_evals = 1;
         f.read_seq(sequence_filename, alphabet_size, pi.get_height(), min_num_of_evals);
 
+        one_pre_timer.stop();
+
+        one_running_timer.start();
         std::vector<unsigned> pd_path;
         f.indexed_posterior_decoding(pi, A, B, i, j, pd_path);
 
-        one_timer.stop();
+        one_running_timer.stop();
     }
 
     // Many
     {
-        many_timer.start();
+        many_pre_timer.start();
 
         zipHMM::HMMSuite f;
         size_t alphabet_size = 4;
         size_t min_num_of_evals = 500;
         f.read_seq(sequence_filename, alphabet_size, pi.get_height(), min_num_of_evals);
 
+        many_pre_timer.stop();
+
+        many_running_timer.start();
         std::vector<unsigned> pd_path;
         f.indexed_posterior_decoding(pi, A, B, i, j, pd_path);
 
-        many_timer.stop();
+        many_running_timer.stop();
     }
 
     output << N << " "
            << T << " "
            << subseq_length << " "
-           << simple_timer.timeElapsed() << " "
-           << one_timer.timeElapsed() << " "
-           << many_timer.timeElapsed() << std::endl;
+           << simple_pre_timer.timeElapsed() << " "
+           << simple_running_timer.timeElapsed() << " "
+           << one_pre_timer.timeElapsed() << " "
+           << one_running_timer.timeElapsed() << " "
+           << many_pre_timer.timeElapsed() << " "
+           << many_running_timer.timeElapsed() << std::endl;
     output.close();
     exit(0);
 }
