@@ -84,7 +84,8 @@ int main(int argc, char **argv) {
     zipHMM::Timer many_path_running_timer;
     zipHMM::Timer many_path_memory_running_timer;
 
-    size_t T_prime;
+    size_t one_T_prime;
+    size_t many_T_prime;
 
     // Simple
     {
@@ -169,7 +170,7 @@ int main(int argc, char **argv) {
         v2.read_seq(sequence_filename, alphabet_size, init_probs.get_height(), min_num_of_evals);
         one_path_pre_timer.stop();
 
-        T_prime = v2.get_seq_length(init_probs.get_height());
+        one_T_prime = v2.get_seq_length(init_probs.get_height());
 
         one_path_running_timer.start();
         v2.viterbi(init_probs, trans_probs, em_probs, viterbi_path);
@@ -211,7 +212,7 @@ int main(int argc, char **argv) {
         v2.read_seq(sequence_filename, alphabet_size, init_probs.get_height(), min_num_of_evals);
         many_path_pre_timer.stop();
 
-        T_prime = v2.get_seq_length(init_probs.get_height());
+        many_T_prime = v2.get_seq_length(init_probs.get_height());
 
         many_path_running_timer.start();
         v2.viterbi(init_probs, trans_probs, em_probs, viterbi_path);
@@ -232,7 +233,8 @@ int main(int argc, char **argv) {
 
     output << N << " "
            << T << " "
-           << T_prime << " "
+           << one_T_prime << " "
+           << many_T_prime << " "
 
            << simple_pre_timer.timeElapsed() << " "
            << simple_running_timer.timeElapsed() << " "
