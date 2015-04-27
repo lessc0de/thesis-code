@@ -73,6 +73,10 @@ namespace zipHMM {
             return;
         }
 
+        ///////////////////////////////////////////////////////////////////////
+        // Compute forward and backward tables for the compressed sequence.
+        ///////////////////////////////////////////////////////////////////////
+
         size_t length = get_seq_length(A.get_height());
         std::vector<double> scales;
 
@@ -84,6 +88,10 @@ namespace zipHMM {
 
         // Compute backward table.
         backward(pi, A, B, scales, backward_table);
+
+        ///////////////////////////////////////////////////////////////////////
+        // Compute forward and backward tables for the uncompressed substring.
+        ///////////////////////////////////////////////////////////////////////
 
         // find alphabet and seqs for given number of states
         size_t no_states = A.get_width();
@@ -98,7 +106,6 @@ namespace zipHMM {
         }
         if(sequences.empty()) {
             sequences = nStates2seqs.rbegin()->second;
-            alphabet_size = nStates2alphabet_size.rbegin()->second;
         }
 
         // Compute the length of the original sequence that each symbol
@@ -127,12 +134,10 @@ namespace zipHMM {
         std::map<size_t, size_t>::const_iterator comp_j_it = orig_index2new_index.lower_bound(j);
         --comp_i_it;
 
-        size_t orig_i;
+        size_t orig_i = comp_i_it->first;
+        size_t comp_i = comp_i_it->second;
         size_t orig_j;
-        size_t comp_i;
         size_t comp_j;
-        orig_i = comp_i_it->first;
-        comp_i = comp_i_it->second;
         if (comp_j_it == orig_index2new_index.end()) {
             comp_j = sequence.size();
             orig_j = get_orig_seq_length();
@@ -144,8 +149,7 @@ namespace zipHMM {
         // Compute the substring of the sequence for which to compute the
         // forward table.
         std::vector<unsigned> sub_seq;
-        deduct_subsequence(sequence, sub_seq, symbol2length, orig_i + 1, orig_j + 1);
-        sub_seq.insert(sub_seq.begin(), sequence[comp_i]);
+        deduct_subsequence(sequence, sub_seq, symbol2length, orig_i, orig_j + 1);
 
         // Compute forward and backward tables for subsequence.
         double *symbol2scale = new double[alphabet_size];
@@ -172,17 +176,17 @@ namespace zipHMM {
             Matrix::copy(end_vector, sub_backward_table[sub_seq.size() - 1]);
         }
 
-        if (orig_i == 0){
-            forward_seq(pi, A, B, sub_seq, symbol2scale, symbol2matrix, sub_scales, true, sub_forward_table);
-        } else {
-            forward_seq(pi, A, B, sub_seq, symbol2scale, symbol2matrix, sub_scales, true, sub_forward_table);
-        }
+        forward_seq(pi, A, B, sub_seq, symbol2scale, symbol2matrix, sub_scales, true, sub_forward_table);
         backward_seq(pi, A, B, sub_seq, sub_scales, symbol2matrix, sub_backward_table);
 
         delete [] symbol2scale;
         delete [] symbol2matrix;
         delete [] forward_table;
         delete [] backward_table;
+
+        ///////////////////////////////////////////////////////////////////////
+        // Compute the posterior decoding for the uncompressed substring.
+        ///////////////////////////////////////////////////////////////////////
 
         // Compute posterior decoding
         posterior_path.resize(0);
