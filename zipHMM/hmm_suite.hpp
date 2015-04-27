@@ -145,8 +145,8 @@ namespace zipHMM {
 
         void deduct_subsequence(const std::vector<unsigned> &comp_sequence,
                                 std::vector<unsigned> &orig_subsequence,
-                                std::map<size_t, size_t> &symbol2length,
-                                size_t i, size_t j) const;
+                                const std::map<size_t, size_t> &symbol2length,
+                                const size_t i, const size_t j) const;
 
 
         double viterbi_helper(const Matrix &pi, const Matrix &A, const Matrix &B,

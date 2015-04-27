@@ -205,35 +205,34 @@ namespace zipHMM {
 
     void HMMSuite::deduct_subsequence(const std::vector<unsigned> &comp_seq,
                                       std::vector<unsigned> &orig_subseq,
-                                      std::map<size_t, size_t> &symbol2length,
-                                      size_t i, size_t j) const {
-        size_t index = 0;
+                                      const std::map<size_t, size_t> &symbol2length,
+                                      const size_t i, const size_t j) const {
+        size_t orig_idx = 0;
         orig_subseq.resize(0);
 
         // Push the compressed subsequence to be decompressed to a stack.
-        std::stack<unsigned> seq_stack;
-        for (std::vector<unsigned>::const_reverse_iterator seq_it = comp_seq.rbegin(); seq_it != comp_seq.rend(); ++seq_it) {
-            seq_stack.push(*seq_it);
-        }
+        std::vector<unsigned> seq_stack = comp_seq;
+        std::reverse(seq_stack.begin(), seq_stack.end());
 
         while (j - i != orig_subseq.size()) {
-            const unsigned c = seq_stack.top();
-            seq_stack.pop();
+            const unsigned c = seq_stack.back();
+            seq_stack.pop_back();
 
-            if (index + symbol2length[c] <= i) {
-                index = index + symbol2length[c];
+            size_t new_idx = orig_idx + symbol2length.at(c);
+            if (new_idx <= i) {
+                orig_idx = new_idx;
                 continue;
             }
 
             if (c >= orig_alphabet_size) {
                 // Recreate original sequence.
                 std::pair<size_t, size_t> p = get_pair(c);
-                seq_stack.push(p.second);
-                seq_stack.push(p.first);
+                seq_stack.push_back(p.second);
+                seq_stack.push_back(p.first);
 
             } else {
                 orig_subseq.push_back(c);
-                ++index;
+                ++orig_idx;
             }
         }
     }
