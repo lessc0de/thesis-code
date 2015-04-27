@@ -144,7 +144,7 @@ namespace zipHMM {
         // Compute the substring of the sequence for which to compute the
         // forward table.
         std::vector<unsigned> sub_seq;
-        deduct_subsequence(sequence, sub_seq, comp_i, comp_j);
+        deduct_subsequence(sequence, sub_seq, symbol2length, orig_i + 1, orig_j + 1);
         sub_seq.insert(sub_seq.begin(), sequence[comp_i]);
 
         // Compute forward and backward tables for subsequence.
@@ -187,7 +187,6 @@ namespace zipHMM {
         // Compute posterior decoding
         posterior_path.resize(0);
         for(size_t c = i - orig_i; c < sub_seq.size() - (orig_j - j) - 1; ++c) {
-            // std::cout << "c: " << c << std::endl;
             double max_val = - std::numeric_limits<double>::max();
             size_t max_state = 0;
             for(size_t r = 0; r < no_states; ++r) {
@@ -206,21 +205,25 @@ namespace zipHMM {
 
     void HMMSuite::deduct_subsequence(const std::vector<unsigned> &comp_seq,
                                       std::vector<unsigned> &orig_subseq,
+                                      std::map<size_t, size_t> &symbol2length,
                                       size_t i, size_t j) const {
-        assert(j <= comp_seq.size());
-        assert(i <= j);
+        size_t index = 0;
+        orig_subseq.resize(0);
 
         // Push the compressed subsequence to be decompressed to a stack.
         std::stack<unsigned> seq_stack;
-        for (std::vector<unsigned>::const_reverse_iterator seq_it = comp_seq.rbegin() + comp_seq.size() - j - 1; seq_it != comp_seq.rbegin() + comp_seq.size() - i - 1; ++seq_it) {
+        for (std::vector<unsigned>::const_reverse_iterator seq_it = comp_seq.rbegin(); seq_it != comp_seq.rend(); ++seq_it) {
             seq_stack.push(*seq_it);
-            // std::cout << "pushing " << *seq_it << " to stack." << std::endl;
         }
 
-        orig_subseq.resize(0);
-        while (!seq_stack.empty()) {
+        while (j - i != orig_subseq.size()) {
             const unsigned c = seq_stack.top();
             seq_stack.pop();
+
+            if (index + symbol2length[c] <= i) {
+                index = index + symbol2length[c];
+                continue;
+            }
 
             if (c >= orig_alphabet_size) {
                 // Recreate original sequence.
@@ -230,6 +233,7 @@ namespace zipHMM {
 
             } else {
                 orig_subseq.push_back(c);
+                ++index;
             }
         }
     }
