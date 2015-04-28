@@ -77,36 +77,42 @@ namespace zipHMM {
         // Compute forward and backward tables for the compressed sequence.
         ///////////////////////////////////////////////////////////////////////
 
+
+        // find alphabet and seqs for given number of states
+        size_t no_states = A.get_width();
+        size_t alphabet_size = 0;
+        std::vector<std::vector< unsigned> > sequences;
+        for(std::map<size_t, std::vector<std::vector<unsigned> > >::const_iterator it = nStates2seqs.begin(); it != nStates2seqs.end(); ++it) {
+            if(it->first >= no_states) {
+                sequences = it->second;
+                alphabet_size = nStates2alphabet_size.find(it->first)->second;
+                break;
+            }
+        }
+        if(sequences.empty()) {
+            sequences = nStates2seqs.rbegin()->second;
+            alphabet_size = nStates2alphabet_size.rbegin()->second;
+        }
+        double *symbol2scale = new double[alphabet_size];
+        Matrix *symbol2matrix = new Matrix[alphabet_size];
+
+        forward_compute_symbol2scale_and_symbol2matrix(symbol2matrix, symbol2scale, A, B, alphabet_size);
+
         size_t length = get_seq_length(A.get_height());
         std::vector<double> scales;
 
         Matrix *forward_table = new Matrix[length];
         Matrix *backward_table = new Matrix[length];
 
-        // Compute forward table.
-        forward(pi, A, B, scales, forward_table);
-
-        // Compute backward table.
-        backward(pi, A, B, scales, backward_table);
+        for(std::vector<std::vector<unsigned> >::const_iterator it = sequences.begin(); it != sequences.end(); ++it) {
+            const std::vector<unsigned> &sequence = (*it);
+            forward_seq(pi, A, B, sequence, symbol2scale, symbol2matrix, scales, true, forward_table);
+            backward_seq(pi, A, B, sequence, scales, symbol2matrix, backward_table);
+        }
 
         ///////////////////////////////////////////////////////////////////////
         // Compute forward and backward tables for the uncompressed substring.
         ///////////////////////////////////////////////////////////////////////
-
-        // find alphabet and seqs for given number of states
-        size_t no_states = A.get_width();
-        size_t alphabet_size = get_alphabet_size(no_states);
-
-        std::vector<std::vector< unsigned> > sequences;
-        for(std::map<size_t, std::vector<std::vector<unsigned> > >::const_iterator it = nStates2seqs.begin(); it != nStates2seqs.end(); ++it) {
-            if(it->first >= no_states) {
-                sequences = it->second;
-                break;
-            }
-        }
-        if(sequences.empty()) {
-            sequences = nStates2seqs.rbegin()->second;
-        }
 
         // Compute the length of the original sequence that each symbol
         // corresponds to.
@@ -150,12 +156,6 @@ namespace zipHMM {
         // forward table.
         std::vector<unsigned> sub_seq;
         int subseq_start_index = deduct_subsequence(sequence, sub_seq, symbol2length, i, j, orig_i, orig_j + 1);
-
-        // Compute forward and backward tables for subsequence.
-        double *symbol2scale = new double[alphabet_size];
-        Matrix *symbol2matrix = new Matrix[alphabet_size];
-
-        forward_compute_symbol2scale_and_symbol2matrix(symbol2matrix, symbol2scale, A, B, alphabet_size);
 
         std::vector<double> sub_scales;
         Matrix *sub_forward_table = new Matrix[sub_seq.size()];
