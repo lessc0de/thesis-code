@@ -65,14 +65,13 @@ int main(int argc, char **argv) {
         struct timeval tv;
         gettimeofday(&tv, NULL);
         std::srand(tv.tv_sec * 1000000 + tv.tv_usec);
-        int i = std::rand() % h.get_orig_seq_length();
-        int j = std::rand() % h.get_orig_seq_length();
+        int i = std::rand() % (h.get_orig_seq_length() - (h.get_orig_seq_length() / 100));
+        int j = i + h.get_orig_seq_length() / 100;
 
-        if (i > j) {
-            int tmp = i;
-            i = j;
-            j = tmp;
-        }
+        assert(i < h.get_orig_seq_length());
+        assert(j < h.get_orig_seq_length());
+        assert(i < j);
+
         h.indexed_posterior_decoding(pi, A, B, i, j, pd_path);
     }
 
