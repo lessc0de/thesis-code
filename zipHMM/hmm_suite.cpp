@@ -149,7 +149,7 @@ namespace zipHMM {
         // Compute the substring of the sequence for which to compute the
         // forward table.
         std::vector<unsigned> sub_seq;
-        deduct_subsequence(sequence, sub_seq, symbol2length, orig_i, orig_j + 1);
+        int subseq_start_index = deduct_subsequence(sequence, sub_seq, symbol2length, i, j, orig_i, orig_j + 1);
 
         // Compute forward and backward tables for subsequence.
         double *symbol2scale = new double[alphabet_size];
@@ -165,15 +165,13 @@ namespace zipHMM {
             Matrix::copy(forward_table[comp_i], sub_forward_table[0]);
         }
 
-        Matrix end_vector;
         if (comp_j == sequence.size() - 1) {
-            end_vector.reset(no_states, 1);
+            sub_backward_table[sub_seq.size() - 1].reset(no_states, 1);
             for (size_t i = 0; i < no_states; ++i) {
-                end_vector(i, 0) = 1.0;
+                sub_backward_table[sub_seq.size() - 1](i, 0) = 1.0;
             }
         } else {
-            Matrix::copy(backward_table[comp_j], end_vector);
-            Matrix::copy(end_vector, sub_backward_table[sub_seq.size() - 1]);
+            Matrix::copy(backward_table[comp_j], sub_backward_table[sub_seq.size() - 1]);
         }
 
         forward_seq(pi, A, B, sub_seq, symbol2scale, symbol2matrix, sub_scales, true, sub_forward_table);
@@ -190,7 +188,7 @@ namespace zipHMM {
 
         // Compute posterior decoding
         posterior_path.resize(0);
-        for(size_t c = i - orig_i; c < sub_seq.size() - (orig_j - j) - 1; ++c) {
+        for(size_t c = subseq_start_index; c < subseq_start_index + j - i; ++c) {
             double max_val = - std::numeric_limits<double>::max();
             size_t max_state = 0;
             for(size_t r = 0; r < no_states; ++r) {
@@ -207,38 +205,62 @@ namespace zipHMM {
         delete [] sub_backward_table;
     }
 
-    void HMMSuite::deduct_subsequence(const std::vector<unsigned> &comp_seq,
-                                      std::vector<unsigned> &orig_subseq,
-                                      const std::map<size_t, size_t> &symbol2length,
-                                      const size_t i, const size_t j) const {
-        size_t orig_idx = 0;
+    int HMMSuite::deduct_subsequence(const std::vector<unsigned> &comp_seq,
+                                     std::vector<unsigned> &orig_subseq,
+                                     const std::map<size_t, size_t> &symbol2length,
+                                     const size_t i, const size_t j,
+                                     const size_t k, const size_t l) const {
+        assert(k <= i);
+        assert(i <= j);
+        assert(j <= l);
+
         orig_subseq.resize(0);
 
-        // Push the compressed subsequence to be decompressed to a stack.
+        // Make a copy of the compressed sequence and reverse it.
         std::vector<unsigned> seq_stack = comp_seq;
         std::reverse(seq_stack.begin(), seq_stack.end());
 
-        while (j - i != orig_subseq.size()) {
+        int orig_idx = -1;
+        int subseq_start_index = -1;
+        while (!seq_stack.empty()) {
             const unsigned c = seq_stack.back();
             seq_stack.pop_back();
 
             size_t new_idx = orig_idx + symbol2length.at(c);
-            if (new_idx <= i) {
+            if (new_idx < k) {
+                // We are before the substring.
                 orig_idx = new_idx;
                 continue;
-            }
-
-            if (c >= orig_alphabet_size) {
-                // Recreate original sequence.
-                std::pair<size_t, size_t> p = get_pair(c);
-                seq_stack.push_back(p.second);
-                seq_stack.push_back(p.first);
-
-            } else {
+            } else if (new_idx < i) {
+                // We are in the left delta area of the substring.
                 orig_subseq.push_back(c);
-                ++orig_idx;
+                orig_idx = new_idx;
+            } else if (new_idx <= j || orig_idx < j) {
+                // We are inside the substring.
+                if (c >= orig_alphabet_size) {
+                    // std::cout << "Splitting pair." << std::endl;
+                    // Recreate original sequence.
+                    std::pair<size_t, size_t> p = get_pair(c);
+                    seq_stack.push_back(p.second);
+                    seq_stack.push_back(p.first);
+                } else {
+                    // std::cout << "Pushing to subseq." << std::endl;
+                    if (subseq_start_index == -1) {
+                        subseq_start_index = orig_subseq.size();
+                    }
+                    orig_subseq.push_back(c);
+                    orig_idx = new_idx;
+                }
+            } else if (new_idx <= l) {
+                // We are in the right delta area of the substring.
+                orig_subseq.push_back(c);
+                orig_idx = new_idx;
+            } else {
+                // We are after the substring.
+                break;
             }
         }
+        return subseq_start_index;
     }
 
 
