@@ -56,9 +56,9 @@ int main(int argc, char **argv) {
     size_t alphabet_size = 4;
     size_t min_num_of_evals = 500;
 
-    h.read_seq(sequence_filename, alphabet_size, min_num_of_evals);
+    h.read_seq(sequence_filename, alphabet_size, init_probs.get_height(), min_num_of_evals);
 
-    for (int i = 0; i < 50; ++i) {
+    for (int i = 0; i < min_num_of_evals; ++i) {
         h.viterbi(init_probs, trans_probs, em_probs, my_viterbi_path);
     }
 
