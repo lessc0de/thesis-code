@@ -227,36 +227,88 @@ namespace zipHMM {
             seq_stack.pop_back();
 
             size_t new_idx = index + symbol2length.at(c);
-            if (new_idx < k) {
-                // We are before the substring.
-            } else if (new_idx < i) {
-                // We are in the left delta area of the substring.
-                orig_subseq.push_back(c);
-            } else if (index < (int) j) {
-                // We are inside the substring.
+
+            if ((index < (int)i && new_idx >= i) ||
+                (index >= (int)i && index < (int)j)) {
+                // Check for overlap with [i, j].
                 if (c >= orig_alphabet_size) {
-                    // Recreate original sequence.
+                    // Decompress c.
                     std::pair<size_t, size_t> p = get_pair(c);
                     seq_stack.push_back(p.second);
                     seq_stack.push_back(p.first);
-                    continue;
                 } else {
-                    orig_subseq.push_back(c);
                     if (start_index == -1) {
-                        start_index = orig_subseq.size() - 1;
+                        start_index = orig_subseq.size();
                     }
+                    orig_subseq.push_back(c);
+                    index = new_idx;
                 }
-            } else if (new_idx <= l) {
-                // We are in the right delta area of the substring.
+            } else if ((index < (int)k && new_idx >= k) ||
+                       (index >= (int)k && index < (int)l)) {
+                // Check for overlap with [k, l].
                 orig_subseq.push_back(c);
-            } else {
-                // We are after the substring.
+                index = new_idx;
+            } else if (index >= (int)l){
+                // Don't continue if we are finished.
                 break;
             }
-            index = new_idx;
         }
         return start_index;
     }
+
+
+    // int HMMSuite::deduct_subsequence(const std::vector<unsigned> &comp_seq,
+    //                                  std::vector<unsigned> &orig_subseq,
+    //                                  const std::map<size_t, size_t> &symbol2length,
+    //                                  const size_t i, const size_t j,
+    //                                  const size_t k, const size_t l) const {
+    //     assert(k <= i);
+    //     assert(i <= j);
+    //     assert(j <= l);
+
+    //     orig_subseq.resize(0);
+
+    //     // Make a copy of the compressed sequence and reverse it.
+    //     std::vector<unsigned> seq_stack = comp_seq;
+    //     std::reverse(seq_stack.begin(), seq_stack.end());
+
+    //     int index = -1;
+    //     int start_index = -1;
+    //     while (!seq_stack.empty()) {
+    //         const unsigned c = seq_stack.back();
+    //         seq_stack.pop_back();
+
+    //         size_t new_idx = index + symbol2length.at(c);
+    //         if (new_idx < k) {
+    //             // We are before the substring.
+    //         } else if (new_idx < i) {
+    //             // We are in the left delta area of the substring.
+    //             orig_subseq.push_back(c);
+    //         } else if (index < (int) j) {
+    //             // We are inside the substring.
+    //             if (c >= orig_alphabet_size) {
+    //                 // Recreate original sequence.
+    //                 std::pair<size_t, size_t> p = get_pair(c);
+    //                 seq_stack.push_back(p.second);
+    //                 seq_stack.push_back(p.first);
+    //                 continue;
+    //             } else {
+    //                 orig_subseq.push_back(c);
+    //                 if (start_index == -1) {
+    //                     start_index = orig_subseq.size() - 1;
+    //                 }
+    //             }
+    //         } else if (new_idx <= l) {
+    //             // We are in the right delta area of the substring.
+    //             orig_subseq.push_back(c);
+    //         } else {
+    //             // We are after the substring.
+    //             break;
+    //         }
+    //         index = new_idx;
+    //     }
+    //     return start_index;
+    // }
 
 
     void HMMSuite::posterior_decoding(const Matrix &pi, const Matrix &A, const Matrix &B,
