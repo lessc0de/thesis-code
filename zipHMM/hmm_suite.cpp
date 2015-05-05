@@ -220,47 +220,42 @@ namespace zipHMM {
         std::vector<unsigned> seq_stack = comp_seq;
         std::reverse(seq_stack.begin(), seq_stack.end());
 
-        int orig_idx = -1;
-        int subseq_start_index = -1;
+        int index = -1;
+        int start_index = -1;
         while (!seq_stack.empty()) {
             const unsigned c = seq_stack.back();
             seq_stack.pop_back();
 
-            size_t new_idx = orig_idx + symbol2length.at(c);
+            size_t new_idx = index + symbol2length.at(c);
             if (new_idx < k) {
                 // We are before the substring.
-                orig_idx = new_idx;
-                continue;
             } else if (new_idx < i) {
                 // We are in the left delta area of the substring.
                 orig_subseq.push_back(c);
-                orig_idx = new_idx;
-            } else if (new_idx <= j || orig_idx < (int) j) {
+            } else if (index < (int) j) {
                 // We are inside the substring.
                 if (c >= orig_alphabet_size) {
-                    // std::cout << "Splitting pair." << std::endl;
                     // Recreate original sequence.
                     std::pair<size_t, size_t> p = get_pair(c);
                     seq_stack.push_back(p.second);
                     seq_stack.push_back(p.first);
+                    continue;
                 } else {
-                    // std::cout << "Pushing to subseq." << std::endl;
-                    if (subseq_start_index == -1) {
-                        subseq_start_index = orig_subseq.size();
-                    }
                     orig_subseq.push_back(c);
-                    orig_idx = new_idx;
+                    if (start_index == -1) {
+                        start_index = orig_subseq.size() - 1;
+                    }
                 }
             } else if (new_idx <= l) {
                 // We are in the right delta area of the substring.
                 orig_subseq.push_back(c);
-                orig_idx = new_idx;
             } else {
                 // We are after the substring.
                 break;
             }
+            index = new_idx;
         }
-        return subseq_start_index;
+        return start_index;
     }
 
 
