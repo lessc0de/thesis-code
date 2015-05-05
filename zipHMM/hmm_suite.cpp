@@ -155,7 +155,7 @@ namespace zipHMM {
         // Compute the substring of the sequence for which to compute the
         // forward table.
         std::vector<unsigned> sub_seq;
-        int subseq_start_index = deduct_subsequence(sequence, sub_seq, symbol2length, i, j, orig_i, orig_j + 1);
+        int subseq_start_index = deduct_subsequence(sequence, sub_seq, symbol2length, i, j, orig_i, orig_j);
 
         std::vector<double> sub_scales;
         Matrix *sub_forward_table = new Matrix[sub_seq.size()];
@@ -235,7 +235,7 @@ namespace zipHMM {
                 // We are in the left delta area of the substring.
                 orig_subseq.push_back(c);
                 orig_idx = new_idx;
-            } else if (new_idx <= j || orig_idx < j) {
+            } else if (new_idx <= j || orig_idx < (int) j) {
                 // We are inside the substring.
                 if (c >= orig_alphabet_size) {
                     // std::cout << "Splitting pair." << std::endl;

@@ -95,13 +95,13 @@ int main(int argc, char **argv) {
 
     if (ref_pd_path != zip_pd_path) {
         std::cout << "Paths not identical!" << std::endl;
-        std::cout << "Length: " << ref_pd_path.size() << "  ";
-        for (size_t i = 0; i < 20 && i < ref_pd_path.size(); ++i) {
+        std::cout << "Correct: length " << ref_pd_path.size() << "  ";
+        for (size_t i = 0; i < 100 && i < ref_pd_path.size(); ++i) {
             std::cout << ref_pd_path[i] << " ";
         }
         std::cout << "..." << std::endl;
-        std::cout << "Length: " << zip_pd_path.size() << "  ";
-        for (size_t i = 0; i < 20 && i < zip_pd_path.size(); ++i) {
+        std::cout << "False:   length " << zip_pd_path.size() << "  ";
+        for (size_t i = 0; i < 100 && i < zip_pd_path.size(); ++i) {
             std::cout << zip_pd_path[i] << " ";
         }
         std::cout << "..." << std::endl;
