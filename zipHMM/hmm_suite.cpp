@@ -222,8 +222,8 @@ namespace zipHMM {
 
         int index = -1;
         int start_index = -1;
-        size_t new_idx = -1;
-        while (!seq_stack.empty()) {
+        size_t new_idx = 0;
+        while (new_idx <= l) {
             const unsigned c = seq_stack.back();
             seq_stack.pop_back();
 
@@ -237,23 +237,20 @@ namespace zipHMM {
                     std::pair<size_t, size_t> p = get_pair(c);
                     seq_stack.push_back(p.second);
                     seq_stack.push_back(p.first);
+                    continue;
                 } else {
                     orig_subseq.push_back(c);
                     if (start_index == -1) {
                         start_index = orig_subseq.size() - 1;
                     }
-                    index = new_idx;
                 }
             } else if ((index < (int)k && new_idx >= k) ||
                        (index >= (int)k && index < (int)l)) {
                 // Check for overlap with [k, l]
                 orig_subseq.push_back(c);
                 index = new_idx;
-            } else if (new_idx > l){
-                break;
-            } else {
-                index = new_idx;
             }
+            index = new_idx;
         }
         return start_index;
     }
