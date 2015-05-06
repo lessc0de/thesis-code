@@ -155,7 +155,7 @@ namespace zipHMM {
         // Compute the substring of the sequence for which to compute the
         // forward table.
         std::vector<unsigned> sub_seq;
-        int subseq_start_index = deduct_subsequence(sequence, sub_seq, symbol2length, i, j, orig_i, orig_j);
+        int subseq_start_index = deduct_subsequence(sequence, sub_seq, symbol2length, orig_index2new_index, i, j, orig_i, orig_j);
 
         std::vector<double> sub_scales;
         Matrix *sub_forward_table = new Matrix[sub_seq.size()];
@@ -208,6 +208,7 @@ namespace zipHMM {
     int HMMSuite::deduct_subsequence(const std::vector<unsigned> &comp_seq,
                                      std::vector<unsigned> &orig_subseq,
                                      const std::map<size_t, size_t> &symbol2length,
+                                     const std::map<size_t, size_t> &orig_index2new_index,
                                      const size_t i, const size_t j,
                                      const size_t k, const size_t l) const {
         assert(k <= i);
@@ -217,16 +218,18 @@ namespace zipHMM {
         orig_subseq.resize(0);
 
         // Make a copy of the compressed sequence and reverse it.
-        std::vector<unsigned> seq_stack = comp_seq;
+        std::vector<unsigned> seq_stack;
+        seq_stack.insert(seq_stack.begin(),
+                         comp_seq.begin() + orig_index2new_index.at(k),
+                         comp_seq.end());
         std::reverse(seq_stack.begin(), seq_stack.end());
 
         int start_index = -1;
-        int index = -1;
+        int index = k - symbol2length.at(seq_stack.back());
         size_t next_index = 0;
         while (next_index <= l && !seq_stack.empty()) {
             const unsigned c = seq_stack.back();
             seq_stack.pop_back();
-
             next_index = index + symbol2length.at(c);
 
             if ((index < (int)i && next_index >= i) ||
