@@ -223,7 +223,7 @@ namespace zipHMM {
         int start_index = -1;
         int index = -1;
         size_t next_index = 0;
-        while (next_index <= l) {
+        while (next_index <= l && !seq_stack.empty()) {
             const unsigned c = seq_stack.back();
             seq_stack.pop_back();
 
