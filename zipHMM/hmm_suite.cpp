@@ -222,35 +222,37 @@ namespace zipHMM {
 
         int index = -1;
         int start_index = -1;
+        size_t new_idx = -1;
         while (!seq_stack.empty()) {
             const unsigned c = seq_stack.back();
             seq_stack.pop_back();
 
-            size_t new_idx = index + symbol2length.at(c);
+            new_idx = index + symbol2length.at(c);
 
             if ((index < (int)i && new_idx >= i) ||
                 (index >= (int)i && index < (int)j)) {
-                // Check for overlap with [i, j].
+                // Check for overlap with [i, j]
                 if (c >= orig_alphabet_size) {
-                    // Decompress c.
+                    // Recreate original sequence.
                     std::pair<size_t, size_t> p = get_pair(c);
                     seq_stack.push_back(p.second);
                     seq_stack.push_back(p.first);
                 } else {
-                    if (start_index == -1) {
-                        start_index = orig_subseq.size();
-                    }
                     orig_subseq.push_back(c);
+                    if (start_index == -1) {
+                        start_index = orig_subseq.size() - 1;
+                    }
                     index = new_idx;
                 }
             } else if ((index < (int)k && new_idx >= k) ||
                        (index >= (int)k && index < (int)l)) {
-                // Check for overlap with [k, l].
+                // Check for overlap with [k, l]
                 orig_subseq.push_back(c);
                 index = new_idx;
-            } else if (index >= (int)l){
-                // Don't continue if we are finished.
+            } else if (new_idx > l){
                 break;
+            } else {
+                index = new_idx;
             }
         }
         return start_index;
