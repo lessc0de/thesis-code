@@ -143,12 +143,12 @@ namespace zipHMM {
                          std::vector<unsigned> &path,
                          const Matrix *symbol2matrixR) const;
 
-        int deduct_subsequence(const std::vector<unsigned> &comp_sequence,
-                               std::vector<unsigned> &orig_subsequence,
-                               const std::map<size_t, size_t> &symbol2length,
-                               const std::map<size_t, size_t> &orig_index2new_index,
-                               const size_t i, const size_t j,
-                               const size_t k, const size_t l) const;
+        size_t deduct_subsequence(const std::vector<unsigned> &comp_sequence,
+                                  std::vector<unsigned> &orig_subsequence,
+                                  const std::map<size_t, size_t> &symbol2length,
+                                  const std::map<size_t, size_t> &orig_index2new_index,
+                                  const size_t i, const size_t j,
+                                  const size_t k, const size_t l) const;
 
 
         double viterbi_helper(const Matrix &pi, const Matrix &A, const Matrix &B,

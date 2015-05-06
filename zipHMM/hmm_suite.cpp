@@ -205,7 +205,7 @@ namespace zipHMM {
         delete [] sub_backward_table;
     }
 
-    int HMMSuite::deduct_subsequence(const std::vector<unsigned> &comp_seq,
+    size_t HMMSuite::deduct_subsequence(const std::vector<unsigned> &comp_seq,
                                      std::vector<unsigned> &orig_subseq,
                                      const std::map<size_t, size_t> &symbol2length,
                                      const std::map<size_t, size_t> &orig_index2new_index,
@@ -224,16 +224,16 @@ namespace zipHMM {
                          comp_seq.end());
         std::reverse(seq_stack.begin(), seq_stack.end());
 
-        int start_index = -1;
-        int index = k - symbol2length.at(seq_stack.back());
-        size_t next_index = 0;
-        while (next_index <= l && !seq_stack.empty()) {
+        size_t start_index = 0;
+        bool start_index_is_set = false;
+        size_t index = k - (symbol2length.at(seq_stack.back()) - 1);
+        while (index <= l) {
             const unsigned c = seq_stack.back();
             seq_stack.pop_back();
-            next_index = index + symbol2length.at(c);
+            size_t next_index = index + symbol2length.at(c);
 
-            if ((index < (int)i && next_index >= i) ||
-                (index >= (int)i && index < (int)j)) {
+            if ((index <= i && next_index > i) ||
+                (index > i && index <= j)) {
                 // Check for overlap with [i, j]
                 if (c >= orig_alphabet_size) {
                     // Recreate original sequence.
@@ -243,12 +243,13 @@ namespace zipHMM {
                     continue;
                 } else {
                     orig_subseq.push_back(c);
-                    if (start_index == -1) {
+                    if (!start_index_is_set) {
                         start_index = orig_subseq.size() - 1;
+                        start_index_is_set = true;
                     }
                 }
-            } else if ((index < (int)k && next_index >= k) ||
-                       (index >= (int)k && index < (int)l)) {
+            } else if ((index <= k && next_index > k) ||
+                       (index > k && index <= l)) {
                 // Check for overlap with [k, l]
                 orig_subseq.push_back(c);
             }
