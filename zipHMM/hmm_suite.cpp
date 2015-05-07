@@ -221,13 +221,13 @@ namespace zipHMM {
         std::vector<unsigned> seq_stack;
         seq_stack.insert(seq_stack.begin(),
                          comp_seq.begin() + orig_index2new_index.at(k),
-                         comp_seq.end());
+                         comp_seq.begin() + orig_index2new_index.at(l) + 1);
         std::reverse(seq_stack.begin(), seq_stack.end());
 
         size_t start_index = 0;
         bool start_index_is_set = false;
         size_t index = k - (symbol2length.at(seq_stack.back()) - 1);
-        while (index <= l) {
+        while (!seq_stack.empty()) {
             const unsigned c = seq_stack.back();
             seq_stack.pop_back();
             size_t next_index = index + symbol2length.at(c);
