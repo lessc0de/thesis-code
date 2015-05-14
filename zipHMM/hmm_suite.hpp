@@ -74,7 +74,7 @@ namespace zipHMM {
         void posterior_decoding(const Matrix &pi, const Matrix &A, const Matrix &B,
                                 std::vector<unsigned> &posterior_path) const;
 
-        void indexed_posterior_decoding(const Matrix &pi, const Matrix &A, const Matrix &B, size_t i, size_t j,
+        void subpath_posterior_decoding(const Matrix &pi, const Matrix &A, const Matrix &B, size_t i, size_t j,
                                         std::vector<unsigned> &posterior_path) const;
 
         size_t get_orig_seq_length() const { return orig_seq_length; }

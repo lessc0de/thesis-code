@@ -15,8 +15,8 @@ target_link_libraries(bench_viterbi zipHMM)
 add_executable(bench_posterior bench_posterior.cpp)
 target_link_libraries(bench_posterior zipHMM)
 
-add_executable(bench_indexed_posterior bench_indexed_posterior.cpp)
-target_link_libraries(bench_indexed_posterior zipHMM)
+add_executable(bench_subpath_posterior bench_subpath_posterior.cpp)
+target_link_libraries(bench_subpath_posterior zipHMM)
 
 add_executable(backward backward.cpp)
 target_link_libraries(backward zipHMM)
@@ -35,8 +35,8 @@ target_link_libraries(profile_viterbi zipHMM profiler)
 add_executable(profile_posterior profile_posterior.cpp)
 target_link_libraries(profile_posterior zipHMM profiler)
 
-add_executable(profile_indexed_posterior profile_indexed_posterior.cpp)
-target_link_libraries(profile_indexed_posterior zipHMM profiler)
+add_executable(profile_subpath_posterior profile_subpath_posterior.cpp)
+target_link_libraries(profile_subpath_posterior zipHMM profiler)
 
-add_executable(indexed_posterior indexed_posterior.cpp)
-target_link_libraries(indexed_posterior zipHMM)
+add_executable(subpath_posterior subpath_posterior.cpp)
+target_link_libraries(subpath_posterior zipHMM)

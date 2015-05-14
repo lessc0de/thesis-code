@@ -109,7 +109,7 @@ int main(int argc, char **argv) {
 
         one_running_timer.start();
         std::vector<unsigned> pd_path;
-        f.indexed_posterior_decoding(pi, A, B, i, j, pd_path);
+        f.subpath_posterior_decoding(pi, A, B, i, j, pd_path);
 
         one_running_timer.stop();
     }
@@ -127,7 +127,7 @@ int main(int argc, char **argv) {
 
         many_running_timer.start();
         std::vector<unsigned> pd_path;
-        f.indexed_posterior_decoding(pi, A, B, i, j, pd_path);
+        f.subpath_posterior_decoding(pi, A, B, i, j, pd_path);
 
         many_running_timer.stop();
     }

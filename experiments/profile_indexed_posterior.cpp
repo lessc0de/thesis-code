@@ -72,7 +72,7 @@ int main(int argc, char **argv) {
         assert(j < h.get_orig_seq_length());
         assert(i < j);
 
-        h.indexed_posterior_decoding(pi, A, B, i, j, pd_path);
+        h.subpath_posterior_decoding(pi, A, B, i, j, pd_path);
     }
 
     exit(0);
