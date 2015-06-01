@@ -43,7 +43,7 @@ namespace zipHMM {
         return sequences.size();
     }
 
-    void HMMSuite::subpath_posterior_decoding(const Matrix &pi, const Matrix &A, const Matrix &B, size_t i, size_t j,
+    void HMMSuite::indexed_posterior_decoding(const Matrix &pi, const Matrix &A, const Matrix &B, size_t i, size_t j,
                                               std::vector<unsigned> &posterior_path) const {
         // Check that matrix dimensions agree.
         if(pi.get_width() != 1 || pi.get_height() != A.get_width() || A.get_height() != A.get_width() ||
@@ -501,7 +501,7 @@ namespace zipHMM {
             std::cerr << "Computing the Viterbi path only works if only a single sequence has been loaded." << std::endl;
             std::exit(-1);
         }
-        return HMMSuite::viterbi_helper(pi, A, B, true, true, viterbi_path);
+        return HMMSuite::viterbi_helper(pi, A, B, true, false, viterbi_path);
     }
 
     double HMMSuite::viterbi(const Matrix &pi, const Matrix &A, const Matrix &B,

@@ -88,7 +88,7 @@ int main(int argc, char **argv) {
 
         std::cout << i << ", " << j << std::endl;
 
-        f.subpath_posterior_decoding(pi, A, B, i, j, zip_pd_path);
+        f.indexed_posterior_decoding(pi, A, B, i, j, zip_pd_path);
         zip_pd_path.insert(zip_pd_path.begin(), ref_pd_path.begin(), ref_pd_path.begin() + i);
         zip_pd_path.insert(zip_pd_path.end(), ref_pd_path.begin() + j, ref_pd_path.end());
     }
