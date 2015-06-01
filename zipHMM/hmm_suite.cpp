@@ -531,10 +531,10 @@ namespace zipHMM {
 
             Matrix::maxMult<LogSpace>(left_matrix, right_matrix, symbol2matrix[i]);
 
+            symbol2argmax_matrix[i].reset(left_matrix.get_height(), right_matrix.get_width());
             for(size_t l = 0; l < left_matrix.get_height(); ++l) {
                 for(size_t r = 0; r < right_matrix.get_width(); ++r) {
                     // Find the best k
-                    symbol2argmax_matrix[i].reset(left_matrix.get_height(), right_matrix.get_width());
                     size_t k = Matrix::argMaxMult<LogSpace>(left_matrix, l, right_matrix, r);
                     symbol2argmax_matrix[i](r, l) = k;
                 }
