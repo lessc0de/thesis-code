@@ -40,3 +40,6 @@ target_link_libraries(profile_subpath_posterior zipHMM profiler)
 
 add_executable(subpath_posterior subpath_posterior.cpp)
 target_link_libraries(subpath_posterior zipHMM)
+
+add_executable(viterbi_example viterbi_example.cpp)
+target_link_libraries(viterbi_example zipHMM)
