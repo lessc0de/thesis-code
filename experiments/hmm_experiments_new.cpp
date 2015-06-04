@@ -90,6 +90,13 @@ int main(int argc, char **argv) {
 
     std::string sequence_filename = argv[2];
 
+    std::vector<unsigned> ref_l_viterbi_path;
+    zipHMM::Timer ref_l_timer;
+    ref_l_timer.start();
+    double res_l = zipHMM::viterbi(sequence_filename, init_probs, trans_probs, em_probs);
+    ref_l_timer.stop();
+    std::cout << "Reference L:\t" << res_l << "\t" << ref_l_timer.timeElapsed() << std::endl;
+
     std::vector<unsigned> ref_viterbi_path;
     zipHMM::Timer ref_timer;
     ref_timer.start();
@@ -116,7 +123,7 @@ int main(int argc, char **argv) {
     comp_timer2.stop();
     std::cout << "My new impl.:\t" << my_new_res2 << "\t" << comp_timer2.timeElapsed() << std::endl;
 
-    if (std::abs(res - my_new_res) > 1e-3 || std::abs(res - my_new_res2) > 1e-3) {
+    if (std::abs(res - my_new_res) > 1e-3 || std::abs(res - my_new_res2) > 1e-3 || std::abs(res - res_l) > 1e-3) {
         std::cout << "Likelihoods not identical!" << std::endl;
         exit(1);
     }
