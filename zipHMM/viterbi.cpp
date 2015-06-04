@@ -28,6 +28,27 @@ namespace zipHMM {
         size_t no_states = A.get_height();
         size_t length = seq.size();
 
+        // Convert matrices to log space.
+        Matrix logpi;
+        Matrix::copy(pi, logpi);
+        Matrix logA;
+        Matrix::copy(A, logA);
+        Matrix logB;
+        Matrix::copy(B, logB);
+
+        for (size_t i = 0; i < no_states; ++i) {
+            logpi(i, 0) = std::log(logpi(i, 0));
+        }
+        for (size_t i = 0; i < no_states; ++i) {
+            for (size_t j = 0; j < no_states; ++j) {
+                logA(i, j) = std::log(logA(i, j));
+            }
+        }
+        for (size_t i = 0; i < no_states; ++i) {
+            for (size_t c = 0; c < 4; ++c) {
+                logB(i, c) = std::log(logB(i, c));
+            }
+        }
         Matrix viterbi_table;
         Matrix tmp;
         if (compute_path) {
@@ -39,7 +60,7 @@ namespace zipHMM {
 
         //init
         for(size_t r = 0; r < no_states; ++r) {
-            viterbi_table(r, 0) = std::log(pi(r, 0) * B(r, seq[0]));
+            viterbi_table(r, 0) = logpi(r, 0) + logB(r, seq[0]);
         }
 
         // recursion
@@ -48,12 +69,12 @@ namespace zipHMM {
                 double max_value = -std::numeric_limits<double>::max();
                 if (compute_path) {
                     for(size_t prev_state = 0; prev_state < no_states; ++prev_state) {
-                        max_value = std::max(max_value, viterbi_table(prev_state, c - 1) + std::log(A(prev_state, r) * B(r, seq[c])));
+                        max_value = std::max(max_value, viterbi_table(prev_state, c - 1) + logA(prev_state, r) + logB(r, seq[c]));
                     }
                     viterbi_table(r,c) = max_value;
                 } else {
                     for(size_t prev_state = 0; prev_state < no_states; ++prev_state) {
-                        max_value = std::max(max_value, viterbi_table(prev_state, 0) + std::log(A(prev_state, r) * B(r, seq[c])));
+                        max_value = std::max(max_value, viterbi_table(prev_state, 0) + logA(prev_state, r) + logB(r, seq[c]));
                     }
                     tmp(r, 0) = max_value;
                 }
@@ -93,10 +114,10 @@ namespace zipHMM {
 
             size_t current_state = end_point;
             for(size_t c = length - 1; c > 0; --c) {
-                double max_value = viterbi_table(0, c - 1) + std::log(A(0, current_state) * B(current_state, seq[c]));
+                double max_value = viterbi_table(0, c - 1) + logA(0, current_state) + logB(current_state, seq[c]);
                 size_t max_state = 0;
                 for(size_t prev_state = 1; prev_state < no_states; ++prev_state) {
-                    double prev_state_ll = viterbi_table(prev_state, c - 1) + std::log(A(prev_state, current_state) * B(current_state, seq[c]));
+                    double prev_state_ll = viterbi_table(prev_state, c - 1) + logA(prev_state, current_state) + logB(current_state, seq[c]);
                     if(prev_state_ll > max_value) {
                         max_value = prev_state_ll;
                         max_state = prev_state;
