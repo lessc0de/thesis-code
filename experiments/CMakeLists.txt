@@ -12,6 +12,9 @@ target_link_libraries(complexity zipHMM)
 add_executable(bench_viterbi bench_viterbi.cpp)
 target_link_libraries(bench_viterbi zipHMM)
 
+add_executable(bench_viterbi_extended bench_viterbi_extended.cpp)
+target_link_libraries(bench_viterbi_extended zipHMM)
+
 add_executable(bench_posterior bench_posterior.cpp)
 target_link_libraries(bench_posterior zipHMM)
 
@@ -43,3 +46,6 @@ target_link_libraries(indexed_posterior zipHMM)
 
 add_executable(viterbi_example viterbi_example.cpp)
 target_link_libraries(viterbi_example zipHMM)
+
+add_executable(papi_viterbi papi_viterbi.cpp)
+target_link_libraries(papi_viterbi zipHMM papi)
