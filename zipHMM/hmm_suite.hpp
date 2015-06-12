@@ -139,11 +139,11 @@ namespace zipHMM {
                                            const Matrix &B,
                                            size_t alphabet_size) const;
 
-        void deduct_path(const std::vector<unsigned> &sequence,
+        void infer_path(const std::vector<unsigned> &sequence,
                          std::vector<unsigned> &path,
                          const Matrix *symbol2matrixR) const;
 
-        size_t deduct_subsequence(const std::vector<unsigned> &comp_sequence,
+        size_t infer_subsequence(const std::vector<unsigned> &comp_sequence,
                                   std::vector<unsigned> &orig_subsequence,
                                   const std::map<size_t, size_t> &symbol2length,
                                   const std::map<size_t, size_t> &orig_index2new_index,

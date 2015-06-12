@@ -155,7 +155,7 @@ namespace zipHMM {
         // Compute the substring of the sequence for which to compute the
         // forward table.
         std::vector<unsigned> sub_seq;
-        int subseq_start_index = deduct_subsequence(sequence, sub_seq, symbol2length, orig_index2new_index, i, j, orig_i, orig_j);
+        int subseq_start_index = infer_subsequence(sequence, sub_seq, symbol2length, orig_index2new_index, i, j, orig_i, orig_j);
 
         std::vector<double> sub_scales;
         Matrix *sub_forward_table = new Matrix[sub_seq.size()];
@@ -205,7 +205,7 @@ namespace zipHMM {
         delete [] sub_backward_table;
     }
 
-    size_t HMMSuite::deduct_subsequence(const std::vector<unsigned> &comp_seq,
+    size_t HMMSuite::infer_subsequence(const std::vector<unsigned> &comp_seq,
                                      std::vector<unsigned> &orig_subseq,
                                      const std::map<size_t, size_t> &symbol2length,
                                      const std::map<size_t, size_t> &orig_index2new_index,
@@ -394,7 +394,7 @@ namespace zipHMM {
                 }
             }
             // Recreate the original HMMSuite path.
-            deduct_path(sequence, viterbi_path, symbol2argmax_matrix);
+            infer_path(sequence, viterbi_path, symbol2argmax_matrix);
         }
 
         if (viterbi_table)
@@ -403,7 +403,7 @@ namespace zipHMM {
         return path_ll;
     }
 
-    void HMMSuite::deduct_path(const std::vector<unsigned> &sequence,
+    void HMMSuite::infer_path(const std::vector<unsigned> &sequence,
                                std::vector<unsigned> &path,
                                const Matrix *symbol2argmax_matrix) const {
         std::stack<unsigned> seq_stack;
